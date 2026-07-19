@@ -6,23 +6,104 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Monitoring Kos - FCM</title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 0 20px; }
-        .status { padding: 10px; border-radius: 5px; margin: 10px 0; }
-        .success { background: #d4edda; color: #155724; }
-        .error { background: #f8d7da; color: #721c24; }
-        .info { background: #d1ecf1; color: #0c5460; }
-        .warning { background: #fff3cd; color: #856404; }
-        button { padding: 10px 20px; margin: 5px; cursor: pointer; border: none; border-radius: 4px; }
-        pre { background: #f4f4f4; padding: 10px; max-height: 300px; overflow-y: auto; font-size: 12px; }
-        .token-box { word-break: break-all; font-size: 12px; background: #eee; padding: 10px; border-radius: 4px; }
-        .btn-primary { background: #007bff; color: white; }
-        .btn-success { background: #28a745; color: white; }
-        .btn-danger { background: #dc3545; color: white; }
-        .btn-warning { background: #ffc107; color: black; }
-        .data-box { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 10px 0; }
-        .alert-text { font-weight: bold; font-size: 18px; }
-        .normal { color: green; }
-        .anomaly { color: red; }
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+        .token-box {
+            word-break: break-all;
+            font-size: 12px;
+            background: #eee;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        .btn-warning {
+            background: #ffc107;
+            color: black;
+        }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .data-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .alert-text {
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .normal {
+            color: green;
+        }
+        .anomaly {
+            color: red;
+        }
+        .notif-popup {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 10px 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            animation: slideDown 0.3s ease;
+        }
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
 
@@ -37,11 +118,10 @@
     </div>
 
     <div style="margin: 20px 0;">
-        <button class="btn-primary" onclick="requestPermission()">📢 Minta Izin Notifikasi</button>
         <button class="btn-success" onclick="kirimNotifikasiTest()">🔔 Kirim Notifikasi Test</button>
         <button class="btn-danger" onclick="kirimDataDummy()">📤 Kirim Data Dummy</button>
         <button class="btn-warning" onclick="mulaiOtomatis()">🔄 Otomatis (5 detik)</button>
-        <button onclick="hentikan()">⏹ Stop</button>
+        <button class="btn-secondary" onclick="hentikan()">⏹ Stop</button>
     </div>
 
     <hr />
@@ -65,8 +145,11 @@
 
     <hr />
     <h3>📋 Log</h3>
-    <pre id="log">🔥 Siap! Klik tombol di atas</pre>
+    <pre id="log">🔥 Siap!</pre>
 
+    <div id="notifContainer"></div>
+
+    <!-- ============ FIREBASE SDK ============ -->
     <script type="importmap">
         {
             "imports": {
@@ -99,11 +182,12 @@
         const db = getDatabase(app);
         const messaging = getMessaging(app);
 
+        // ============ DOM ELEMENTS ============
         const logEl = document.getElementById('log');
         const statusBox = document.getElementById('statusBox');
         const tokenBox = document.getElementById('tokenBox');
+        const notifContainer = document.getElementById('notifContainer');
 
-        // Elemen data
         const daya1 = document.getElementById('daya1');
         const arus1 = document.getElementById('arus1');
         const tegangan1 = document.getElementById('tegangan1');
@@ -112,6 +196,9 @@
         const arus2 = document.getElementById('arus2');
         const tegangan2 = document.getElementById('tegangan2');
         const alert2 = document.getElementById('alert2');
+
+        let lastAlert1 = 'Normal';
+        let lastAlert2 = 'Normal';
 
         function log(msg) {
             logEl.innerText += '\n' + msg;
@@ -123,7 +210,55 @@
             statusBox.className = 'status ' + type;
         }
 
+        // ============ TAMPILKAN NOTIFIKASI DI WEB ============
+        function showNotifInWeb(title, body) {
+            const div = document.createElement('div');
+            div.className = 'notif-popup';
+            div.innerHTML = `<strong>🔔 ${title}</strong><br>${body}`;
+            notifContainer.prepend(div);
+            setTimeout(() => div.remove(), 15000);
+        }
+
+        // ============ KIRIM NOTIFIKASI OTOMATIS ============
+        async function kirimNotifikasiOtomatis(kamar, pesan) {
+            try {
+                const snapshot = await get(ref(db, '/fcm_tokens'));
+                const tokensData = snapshot.val();
+                if (!tokensData) {
+                    log('⚠️ Belum ada token, notifikasi tidak terkirim');
+                    return;
+                }
+
+                const tokenList = Object.values(tokensData).map(t => t.token);
+                let success = 0;
+
+                for (const token of tokenList) {
+                    try {
+                        const response = await fetch('/api/send', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                token: token,
+                                title: `🚨 PERINGATAN ${kamar}!`,
+                                body: pesan
+                            })
+                        });
+                        const result = await response.json();
+                        if (result.success) success++;
+                    } catch (e) {
+                        log(`❌ Gagal kirim ke token: ${e.message}`);
+                    }
+                }
+
+                log(`📤 Notifikasi otomatis terkirim ke ${success} perangkat`);
+                showNotifInWeb(`🚨 ${kamar}`, pesan);
+            } catch (e) {
+                log(`❌ Error kirim notifikasi otomatis: ${e.message}`);
+            }
+        }
+
         // ============ LISTENER DATA REAL-TIME ============
+        // Kamar 1
         onValue(ref(db, '/kamar_1'), (snapshot) => {
             const data = snapshot.val();
             if (data) {
@@ -133,6 +268,19 @@
             }
         });
 
+        onValue(ref(db, '/alerts/kamar_1'), async (snapshot) => {
+            const val = snapshot.val() || 'Normal';
+            alert1.innerText = val;
+            alert1.className = 'alert-text ' + (val.includes('berlebih') ? 'anomaly' : 'normal');
+
+            // Kirim notifikasi otomatis jika status berubah jadi anomali
+            if (val.includes('berlebih') && lastAlert1 === 'Normal') {
+                await kirimNotifikasiOtomatis('Kamar 1', val);
+            }
+            lastAlert1 = val;
+        });
+
+        // Kamar 2
         onValue(ref(db, '/kamar_2'), (snapshot) => {
             const data = snapshot.val();
             if (data) {
@@ -142,33 +290,30 @@
             }
         });
 
-        onValue(ref(db, '/alerts/kamar_1'), (snapshot) => {
-            const val = snapshot.val() || 'Normal';
-            alert1.innerText = val;
-            alert1.className = 'alert-text ' + (val.includes('berlebih') ? 'anomaly' : 'normal');
-        });
-
-        onValue(ref(db, '/alerts/kamar_2'), (snapshot) => {
+        onValue(ref(db, '/alerts/kamar_2'), async (snapshot) => {
             const val = snapshot.val() || 'Normal';
             alert2.innerText = val;
             alert2.className = 'alert-text ' + (val.includes('berlebih') ? 'anomaly' : 'normal');
+
+            if (val.includes('berlebih') && lastAlert2 === 'Normal') {
+                await kirimNotifikasiOtomatis('Kamar 2', val);
+            }
+            lastAlert2 = val;
         });
 
-        // ============ REQUEST PERMISSION + GET TOKEN ============
-        window.requestPermission = async function() {
+        // ============ AUTO REQUEST PERMISSION ============
+        async function autoRequestPermission() {
             try {
                 const permission = await Notification.requestPermission();
                 log(`📢 Izin: ${permission}`);
+
                 if (permission !== 'granted') {
-                    setStatus('❌ Izin ditolak!', 'error');
+                    setStatus('⚠️ Izin notifikasi ditolak. Aktifkan di pengaturan browser.', 'error');
                     return;
                 }
 
-                await navigator.serviceWorker.register('/firebase-messaging-sw.js');
                 const registration = await navigator.serviceWorker.ready;
-                log('✅ Service Worker ready');
-
-                const token = await getToken(messaging, { 
+                const token = await getToken(messaging, {
                     vapidKey: VAPID_KEY,
                     serviceWorkerRegistration: registration
                 });
@@ -186,47 +331,102 @@
                 setStatus(`❌ Error: ${error.message}`, 'error');
                 log(`❌ Error: ${error.message}`);
             }
-        };
+        }
+
+        // ============ AUTO RUN SAAT LOAD ============
+        window.addEventListener('load', async () => {
+            log('🔥 Memulai...');
+            log('⏳ Mengecek Service Worker...');
+
+            try {
+                // Register SW
+                await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+                log('✅ Service Worker registered');
+
+                // Tunggu SW ready
+                const registration = await navigator.serviceWorker.ready;
+                log('✅ Service Worker ready');
+
+                // Cek apakah sudah punya token
+                try {
+                    const token = await getToken(messaging, {
+                        vapidKey: VAPID_KEY,
+                        serviceWorkerRegistration: registration
+                    });
+
+                    if (token) {
+                        tokenBox.innerText = token;
+                        setStatus('✅ Token sudah ada!', 'success');
+                        log('📱 Token ditemukan');
+
+                        // Simpan token jika belum ada di database
+                        const tokenPath = '/fcm_tokens/' + token.replace(/[.#$\/\[\]]/g, '_');
+                        await set(ref(db, tokenPath), { token, timestamp: Date.now() });
+                    } else {
+                        // Belum ada token → minta izin
+                        log('⏳ Belum ada token, meminta izin...');
+                        await autoRequestPermission();
+                    }
+                } catch (e) {
+                    log(`⏳ Belum ada token atau error, meminta izin...`);
+                    await autoRequestPermission();
+                }
+
+            } catch (error) {
+                log(`❌ Error inisialisasi: ${error.message}`);
+                setStatus(`❌ Error: ${error.message}`, 'error');
+                // Coba lagi setelah 3 detik
+                setTimeout(autoRequestPermission, 3000);
+            }
+        });
 
         // ============ TANGKAP NOTIFIKASI FOREGROUND ============
         onMessage(messaging, (payload) => {
-            log(`🔔 Notifikasi: ${payload.notification?.title}`);
-            // Tampilkan notifikasi di halaman
-            const notifDiv = document.createElement('div');
-            notifDiv.className = 'status warning';
-            notifDiv.innerText = `🔔 ${payload.notification?.title}: ${payload.notification?.body}`;
-            document.body.prepend(notifDiv);
-            setTimeout(() => notifDiv.remove(), 10000);
+            const title = payload.notification?.title || 'Notifikasi';
+            const body = payload.notification?.body || '';
+            log(`🔔 Notifikasi diterima: ${title}`);
+            showNotifInWeb(title, body);
         });
 
-        // ============ KIRIM NOTIFIKASI OTOMATIS ============
-        async function kirimNotifikasiOtomatis(daya1Val, daya2Val) {
+        // ============ KIRIM NOTIFIKASI TEST MANUAL ============
+        window.kirimNotifikasiTest = async function() {
             try {
                 const snapshot = await get(ref(db, '/fcm_tokens'));
                 const tokensData = snapshot.val();
-                if (!tokensData) return;
+                if (!tokensData) {
+                    setStatus('❌ Belum ada token!', 'error');
+                    log('❌ Tidak ada FCM token tersimpan');
+                    return;
+                }
 
                 const tokenList = Object.values(tokensData).map(t => t.token);
-                let pesan = '';
-                if (daya1Val > 500) pesan += `⚠️ Kamar 1: ${daya1Val.toFixed(2)}W (berlebih!)\n`;
-                if (daya2Val > 500) pesan += `⚠️ Kamar 2: ${daya2Val.toFixed(2)}W (berlebih!)`;
+                log(`📤 Ditemukan ${tokenList.length} token`);
+                let success = 0;
 
                 for (const token of tokenList) {
-                    await fetch('/api/send', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            token: token,
-                            title: '🚨 PERINGATAN DAYA BERLEBIH!',
-                            body: pesan
-                        })
-                    });
+                    try {
+                        const response = await fetch('/api/send', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                token: token,
+                                title: '🔔 Test Notifikasi',
+                                body: 'Ini notifikasi dari web dashboard!'
+                            })
+                        });
+                        const result = await response.json();
+                        if (result.success) success++;
+                    } catch (e) {
+                        log(`❌ Error: ${e.message}`);
+                    }
                 }
-                log(`📤 Notifikasi otomatis terkirim!`);
-            } catch (e) {
-                log(`❌ Gagal kirim notif otomatis: ${e.message}`);
+                setStatus(`✅ ${success} notifikasi terkirim!`, 'success');
+                log(`📊 Selesai: ${success} sukses`);
+            } catch (error) {
+                setStatus(`❌ Error: ${error.message}`, 'error');
+                log(`❌ Error: ${error.message}`);
             }
-        }
+        };
 
         // ============ KIRIM DATA DUMMY ============
         const DB_URL = 'https://pzemm-6b93a-default-rtdb.firebaseio.com/';
@@ -264,46 +464,10 @@
                     body: JSON.stringify(alert2Val)
                 });
 
-                // ============ NOTIFIKASI OTOMATIS ============
-                if (p1 > 500 || p2 > 500) {
-                    await kirimNotifikasiOtomatis(p1, p2);
-                }
-
                 log(`✅ Data: Kamar1=${p1.toFixed(2)}W | Kamar2=${p2.toFixed(2)}W`);
                 setStatus(`✅ Data terkirim!`, 'success');
             } catch (e) {
                 log(`❌ Error: ${e.message}`);
-            }
-        };
-
-        // ============ KIRIM NOTIFIKASI TEST MANUAL ============
-        window.kirimNotifikasiTest = async function() {
-            try {
-                const snapshot = await get(ref(db, '/fcm_tokens'));
-                const tokensData = snapshot.val();
-                if (!tokensData) {
-                    setStatus('❌ Belum ada token!', 'error');
-                    return;
-                }
-
-                const tokenList = Object.values(tokensData).map(t => t.token);
-                let success = 0;
-                for (const token of tokenList) {
-                    const response = await fetch('/api/send', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            token: token,
-                            title: '🔔 Test Notifikasi',
-                            body: 'Ini notifikasi dari web dashboard!'
-                        })
-                    });
-                    const result = await response.json();
-                    if (result.success) success++;
-                }
-                setStatus(`✅ ${success} notifikasi terkirim!`, 'success');
-            } catch (error) {
-                setStatus(`❌ Error: ${error.message}`, 'error');
             }
         };
 
@@ -316,13 +480,15 @@
             log('🔄 Otomatis berjalan (tiap 5 detik)');
         };
         window.hentikan = function() {
-            if (interval) { clearInterval(interval);
+            if (interval) {
+                clearInterval(interval);
                 interval = null;
-                log('⏹ Dihentikan'); }
+                log('⏹ Dihentikan');
+            }
         };
 
         log('🔥 Siap!');
-        log('📌 Klik "Minta Izin Notifikasi" untuk setup FCM');
+        log('📌 Izin notifikasi akan diminta otomatis');
     </script>
 </body>
 
