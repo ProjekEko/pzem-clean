@@ -2,7 +2,6 @@
 const admin = require('firebase-admin');
 
 // ============ SERVICE ACCOUNT ============
-// AMBIL DARI: Firebase Console → Project Settings → Service Accounts → Generate New Private Key
 const serviceAccount = {
     type: "service_account",
     project_id: "pzemm-6b93a",
@@ -45,7 +44,7 @@ eKa5gGCF3V8FuM2QrUX+tl0=
     universe_domain: "googleapis.com"
 };
 
-// ============ INISIALISASI FIREBASE ADMIN ============
+// ============ INISIALISASI ============
 if (!admin.apps.length) {
     admin.initializeApp({
         credential: admin.credential.cert(serviceAccount)
@@ -67,13 +66,13 @@ module.exports = async (req, res) => {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const { token, title, body } = req.body;
-
-    if (!token) {
-        return res.status(400).json({ error: 'Token diperlukan' });
-    }
-
     try {
+        const { token, title, body } = req.body;
+
+        if (!token) {
+            return res.status(400).json({ error: 'Token diperlukan' });
+        }
+
         const response = await admin.messaging().send({
             token: token,
             notification: {
@@ -89,7 +88,7 @@ module.exports = async (req, res) => {
 
         res.status(200).json({ success: true, messageId: response });
     } catch (error) {
-        console.error('Error kirim notifikasi:', error);
+        console.error('Error:', error);
         res.status(500).json({ error: error.message });
     }
 };
