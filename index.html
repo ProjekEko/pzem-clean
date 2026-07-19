@@ -12,17 +12,60 @@
             margin: 20px auto;
             padding: 0 20px;
         }
-        .status { padding: 10px; border-radius: 5px; margin: 10px 0; }
-        .success { background: #d4edda; color: #155724; }
-        .error { background: #f8d7da; color: #721c24; }
-        .info { background: #d1ecf1; color: #0c5460; }
-        button { padding: 10px 20px; margin: 5px; cursor: pointer; border: none; border-radius: 4px; }
-        pre { background: #f4f4f4; padding: 10px; max-height: 300px; overflow-y: auto; font-size: 12px; }
-        .token-box { word-break: break-all; font-size: 12px; background: #eee; padding: 10px; border-radius: 4px; }
-        .btn-primary { background: #007bff; color: white; }
-        .btn-success { background: #28a745; color: white; }
-        .btn-danger { background: #dc3545; color: white; }
-        .btn-warning { background: #ffc107; color: black; }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+        .token-box {
+            word-break: break-all;
+            font-size: 12px;
+            background: #eee;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        .btn-warning {
+            background: #ffc107;
+            color: black;
+        }
     </style>
 </head>
 
@@ -95,7 +138,7 @@
             statusBox.className = 'status ' + type;
         }
 
-        // ============ REQUEST PERMISSION + GET TOKEN (FIX) ============
+        // ============ REQUEST PERMISSION + GET TOKEN (FIX FINAL) ============
         window.requestPermission = async function() {
             try {
                 setStatus('⏳ Meminta izin notifikasi...', 'info');
@@ -112,11 +155,15 @@
                 setStatus('✅ Izin diberikan! Mendapatkan token...', 'success');
                 log('✅ Izin diberikan, mendapatkan token...');
 
-                // ============ PASTIKAN SW TERDAFTAR DULU ============
-                const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-                log('✅ Service Worker terdaftar');
+                // ============ REGISTER SW ============
+                await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+                log('✅ Service Worker registered');
 
-                // ============ GET TOKEN DENGAN SW REGISTRATION ============
+                // ============ TUNGGU SW AKTIF ============
+                const registration = await navigator.serviceWorker.ready;
+                log('✅ Service Worker ready/aktif');
+
+                // ============ GET TOKEN ============
                 const token = await getToken(messaging, { 
                     vapidKey: VAPID_KEY,
                     serviceWorkerRegistration: registration
@@ -240,6 +287,23 @@
 
         log('🔥 Siap!');
         log('📌 Klik "Minta Izin Notifikasi" untuk setup FCM');
+
+        // Cek token existing di awal
+        navigator.serviceWorker.ready.then(async (registration) => {
+            try {
+                const token = await getToken(messaging, { 
+                    vapidKey: VAPID_KEY,
+                    serviceWorkerRegistration: registration
+                });
+                if (token) {
+                    tokenBox.innerText = token;
+                    setStatus('✅ Token sudah ada!', 'success');
+                    log(`📱 Token ditemukan: ${token.substring(0, 30)}...`);
+                }
+            } catch (e) {
+                // Token belum ada, abaikan
+            }
+        });
     </script>
 </body>
 
