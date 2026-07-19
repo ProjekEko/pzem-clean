@@ -1,7 +1,8 @@
 // api/send.js
 const admin = require('firebase-admin');
 
-// Service Account dari file JSON
+// ============ SERVICE ACCOUNT ============
+// AMBIL DARI: Firebase Console → Project Settings → Service Accounts → Generate New Private Key
 const serviceAccount = {
     type: "service_account",
     project_id: "pzemm-6b93a",
@@ -44,15 +45,16 @@ eKa5gGCF3V8FuM2QrUX+tl0=
     universe_domain: "googleapis.com"
 };
 
-// Inisialisasi Firebase Admin
+// ============ INISIALISASI FIREBASE ADMIN ============
 if (!admin.apps.length) {
     admin.initializeApp({
         credential: admin.credential.cert(serviceAccount)
     });
 }
 
+// ============ VERCEL SERVERLESS FUNCTION ============
 module.exports = async (req, res) => {
-    // CORS biar bisa dipanggil dari frontend
+    // CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -80,7 +82,7 @@ module.exports = async (req, res) => {
             },
             webpush: {
                 fcm_options: {
-                    link: 'https://pzem.vercel.app/'
+                    link: 'https://pzem-clean.vercel.app/'
                 }
             }
         });

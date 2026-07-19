@@ -135,11 +135,9 @@
         };
 
         // ============ VAPID KEY ============
+        // AMBIL DARI: Firebase Console → Project Settings → Cloud Messaging → Web Push Certificates
+        // KALAU BELUM ADA, KLIK "Generate Key Pair"
         const VAPID_KEY = "BMzsN-HLGcyJKKAj1Vmy20s2sYjDUDLpv9ZNsqvpkGe5erl-n9ll32epabkgxoF8qflFAC70tNVwiDRuJjxAev4";
-
-        // ============ SERVER KEY (Legacy) ============
-        // AMBIL DARI: Firebase Console → Cloud Messaging → Enable Legacy API → Copy Server Key
-        const SERVER_KEY = "PASTE_SERVER_KEY_DARI_FIREBASE_CONSOLE"; // ← GANTI INI!
 
         // ============ INISIALISASI ============
         const app = initializeApp(firebaseConfig);
@@ -212,61 +210,62 @@
             alert('📢 ' + msg);
         });
 
-        // ============ KIRIM NOTIFIKASI VIA VERCEL API ============
-window.kirimNotifikasiTest = async function() {
-    try {
-        log('⏳ Mengambil daftar token...');
-
-        const snapshot = await get(ref(db, '/fcm_tokens'));
-        const tokensData = snapshot.val();
-
-        if (!tokensData) {
-            setStatus('❌ Belum ada token!', 'error');
-            log('❌ Tidak ada FCM token tersimpan');
-            return;
-        }
-
-        const tokenList = Object.values(tokensData).map(t => t.token);
-        log(`📤 Ditemukan ${tokenList.length} token`);
-
-        let successCount = 0;
-        let failCount = 0;
-
-        // Kirim ke setiap token
-        for (const token of tokenList) {
+        // ============ 3. KIRIM NOTIFIKASI VIA VERCEL API ============
+        window.kirimNotifikasiTest = async function() {
             try {
-                const response = await fetch('https://pzem.vercel.app/api/send', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        token: token,
-                        title: '🔔 Test Notifikasi',
-                        body: 'Ini notifikasi dari web dashboard!'
-                    })
-                });
+                log('⏳ Mengambil daftar token...');
 
-                const result = await response.json();
-                if (result.success) {
-                    successCount++;
-                    log(`✅ Notifikasi terkirim ke ${token.substring(0, 15)}...`);
-                } else {
-                    failCount++;
-                    log(`❌ Gagal: ${result.error}`);
+                const snapshot = await get(ref(db, '/fcm_tokens'));
+                const tokensData = snapshot.val();
+
+                if (!tokensData) {
+                    setStatus('❌ Belum ada token!', 'error');
+                    log('❌ Tidak ada FCM token tersimpan');
+                    return;
                 }
-            } catch (e) {
-                failCount++;
-                log(`❌ Error: ${e.message}`);
+
+                const tokenList = Object.values(tokensData).map(t => t.token);
+                log(`📤 Ditemukan ${tokenList.length} token`);
+
+                let successCount = 0;
+                let failCount = 0;
+
+                for (const token of tokenList) {
+                    try {
+                        // ============ PAKAI VERCEL API ============
+                        const response = await fetch('/api/send', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                token: token,
+                                title: '🔔 Test Notifikasi',
+                                body: 'Ini notifikasi dari web dashboard!'
+                            })
+                        });
+
+                        const result = await response.json();
+                        if (result.success) {
+                            successCount++;
+                            log(`✅ Notifikasi terkirim ke ${token.substring(0, 15)}...`);
+                        } else {
+                            failCount++;
+                            log(`❌ Gagal: ${result.error}`);
+                        }
+                    } catch (e) {
+                        failCount++;
+                        log(`❌ Error: ${e.message}`);
+                    }
+                }
+
+                setStatus(`✅ ${successCount} berhasil, ${failCount} gagal`, 'success');
+                log(`📊 Selesai: ${successCount} sukses, ${failCount} gagal`);
+
+            } catch (error) {
+                setStatus(`❌ Error: ${error.message}`, 'error');
+                log(`❌ Error: ${error.message}`);
             }
-        }
+        };
 
-        setStatus(`✅ ${successCount} berhasil, ${failCount} gagal`, 'success');
-        log(`📊 Selesai: ${successCount} sukses, ${failCount} gagal`);
-
-    } catch (error) {
-        setStatus(`❌ Error: ${error.message}`, 'error');
-        log(`❌ Error: ${error.message}`);
-    }
-};
         // ============ 4. KIRIM DATA DUMMY ============
         const DB_URL = 'https://pzemm-6b93a-default-rtdb.firebaseio.com/';
 
