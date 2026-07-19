@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FCM Test - Monitoring Kos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+        }
+
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+
+        .token-box {
+            word-break: break-all;
+            font-size: 12px;
+            background: #eee;
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: black;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>🔔 FCM Test - Monitoring Kos</h1>
+
+    <div id="statusBox" class="status info">
+        🔄 Initializing...
+    </div>
+
+    <div>
+        <p><strong>📱 FCM Token:</strong></p>
+        <div id="tokenBox" class="token-box">Belum ada</div>
+    </div>
+
+    <div style="margin: 20px 0;">
+        <button class="btn-primary" onclick="requestPermission()">📢 Minta Izin Notifikasi</button>
+        <button class="btn-success" onclick="kirimNotifikasiTest()">🔔 Kirim Notifikasi Test</button>
+        <button class="btn-danger" onclick="kirimDataDummy()">📤 Kirim Data Dummy</button>
+        <button class="btn-warning" onclick="mulaiOtomatis()">🔄 Otomatis (5 detik)</button>
+        <button onclick="hentikan()">⏹ Stop</button>
+    </div>
+
+    <hr />
+
+    <h3>📋 Log</h3>
+    <pre id="log">🔥 Siap! Klik tombol di atas</pre>
+
+    <!-- ============ FIREBASE SDK ============ -->
+    <script type="importmap">
+        {
+            "imports": {
+                "firebase/app": "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js",
+                "firebase/database": "https://www.gstatic.com/firebasejs/10.13.0/firebase-database.js",
+                "firebase/messaging": "https://www.gstatic.com/firebasejs/10.13.0/firebase-messaging.js"
+            }
+        }
+    </script>
+
+    <script type="module">
+        // ============ IMPOR FIREBASE ============
+        import { initializeApp } from "firebase/app";
+        import { getDatabase, ref, set, onValue, get } from "firebase/database";
+        import { getMessaging, getToken, onMessage } from "firebase/messaging";
+
+        // ============ CONFIG FIREBASE ============
+        const firebaseConfig = {
+            apiKey: "AIzaSyDPp_SyvQJApKckpT-YpGBbfMMBAkpvj7A",
+            authDomain: "pzemm-6b93a.firebaseapp.com",
+            databaseURL: "https://pzemm-6b93a-default-rtdb.firebaseio.com/",
+            projectId: "pzemm-6b93a",
+            storageBucket: "pzemm-6b93a.firebasestorage.app",
+            messagingSenderId: "160759139666",
+            appId: "1:160759139666:web:68172f5527557b36507e8b"
+        };
+
+        // ============ VAPID KEY ============
+        const VAPID_KEY = "BMzsN-HLGcyJKKAj1Vmy20s2sYjDUDLpv9ZNsqvpkGe5erl-n9ll32epabkgxoF8qflFAC70tNVwiDRuJjxAev4";
+
+        // ============ SERVER KEY (Legacy) ============
+        // AMBIL DARI: Firebase Console → Cloud Messaging → Enable Legacy API → Copy Server Key
+        const SERVER_KEY = "PASTE_SERVER_KEY_DARI_FIREBASE_CONSOLE"; // ← GANTI INI!
+
+        // ============ INISIALISASI ============
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const messaging = getMessaging(app);
+
+        // ============ DOM ELEMENTS ============
+        const logEl = document.getElementById('log');
+        const statusBox = document.getElementById('statusBox');
+        const tokenBox = document.getElementById('tokenBox');
+
+        function log(msg) {
+            logEl.innerText += '\n' + msg;
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        function setStatus(msg, type = 'info') {
+            statusBox.innerText = msg;
+            statusBox.className = 'status ' + type;
+        }
+
+        // ============ 1. REQUEST PERMISSION + GET TOKEN ============
+        window.requestPermission = async function() {
+            try {
+                setStatus('⏳ Meminta izin notifikasi...', 'info');
+                log('⏳ Meminta izin...');
+
+                const permission = await Notification.requestPermission();
+                log(`📢 Izin: ${permission}`);
+
+                if (permission !== 'granted') {
+                    setStatus('❌ Izin ditolak!', 'error');
+                    return;
+                }
+
+                setStatus('✅ Izin diberikan! Mendapatkan token...', 'success');
+                log('✅ Izin diberikan, mendapatkan token...');
+
+                const token = await getToken(messaging, { vapidKey: VAPID_KEY });
+
+                if (token) {
+                    tokenBox.innerText = token;
+                    setStatus('✅ Token berhasil didapatkan!', 'success');
+                    log(`📱 Token: ${token.substring(0, 30)}...`);
+
+                    const tokenPath = '/fcm_tokens/' + token.replace(/[.#$\/\[\]]/g, '_');
+                    await set(ref(db, tokenPath), {
+                        token: token,
+                        timestamp: Date.now(),
+                        userAgent: navigator.userAgent,
+                        platform: navigator.platform
+                    });
+                    log('✅ Token disimpan ke Firebase Realtime Database');
+                } else {
+                    setStatus('❌ Gagal mendapatkan token', 'error');
+                    log('❌ Token kosong!');
+                }
+
+            } catch (error) {
+                setStatus(`❌ Error: ${error.message}`, 'error');
+                log(`❌ Error: ${error.message}`);
+                console.error(error);
+            }
+        };
+
+        // ============ 2. TANGKAP NOTIFIKASI FOREGROUND ============
+        onMessage(messaging, (payload) => {
+            log(`🔔 Notifikasi diterima (web terbuka): ${payload.notification?.title || 'No title'}`);
+            const msg = `${payload.notification?.title || 'Notifikasi'}\n${payload.notification?.body || ''}`;
+            alert('📢 ' + msg);
+        });
+
+        // ============ KIRIM NOTIFIKASI VIA VERCEL API ============
+window.kirimNotifikasiTest = async function() {
+    try {
+        log('⏳ Mengambil daftar token...');
+
+        const snapshot = await get(ref(db, '/fcm_tokens'));
+        const tokensData = snapshot.val();
+
+        if (!tokensData) {
+            setStatus('❌ Belum ada token!', 'error');
+            log('❌ Tidak ada FCM token tersimpan');
+            return;
+        }
+
+        const tokenList = Object.values(tokensData).map(t => t.token);
+        log(`📤 Ditemukan ${tokenList.length} token`);
+
+        let successCount = 0;
+        let failCount = 0;
+
+        // Kirim ke setiap token
+        for (const token of tokenList) {
+            try {
+                const response = await fetch('https://pzem.vercel.app/api/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        token: token,
+                        title: '🔔 Test Notifikasi',
+                        body: 'Ini notifikasi dari web dashboard!'
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    successCount++;
+                    log(`✅ Notifikasi terkirim ke ${token.substring(0, 15)}...`);
+                } else {
+                    failCount++;
+                    log(`❌ Gagal: ${result.error}`);
+                }
+            } catch (e) {
+                failCount++;
+                log(`❌ Error: ${e.message}`);
+            }
+        }
+
+        setStatus(`✅ ${successCount} berhasil, ${failCount} gagal`, 'success');
+        log(`📊 Selesai: ${successCount} sukses, ${failCount} gagal`);
+
+    } catch (error) {
+        setStatus(`❌ Error: ${error.message}`, 'error');
+        log(`❌ Error: ${error.message}`);
+    }
+};
+        // ============ 4. KIRIM DATA DUMMY ============
+        const DB_URL = 'https://pzemm-6b93a-default-rtdb.firebaseio.com/';
+
+        window.kirimDataDummy = async function() {
+            try {
+                const t1 = 220 + (Math.random() - 0.5) * 10;
+                const a1 = 1 + Math.random() * 4;
+                const p1 = t1 * a1;
+                const t2 = 220 + (Math.random() - 0.5) * 10;
+                const a2 = 1 + Math.random() * 4;
+                const p2 = t2 * a2;
+
+                const alert1 = p1 > 500 ? `⚠️ Daya berlebih: ${p1.toFixed(2)}W` : 'Normal';
+                const alert2 = p2 > 500 ? `⚠️ Daya berlebih: ${p2.toFixed(2)}W` : 'Normal';
+
+                await fetch(DB_URL + 'kamar_1.json', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tegangan: t1, arus: a1, daya: p1, energi: p1 * 0.001, timestamp: Date.now() })
+                });
+                await fetch(DB_URL + 'kamar_2.json', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tegangan: t2, arus: a2, daya: p2, energi: p2 * 0.001, timestamp: Date.now() })
+                });
+                await fetch(DB_URL + 'alerts/kamar_1.json', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(alert1)
+                });
+                await fetch(DB_URL + 'alerts/kamar_2.json', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(alert2)
+                });
+
+                log(`✅ Data: Kamar1=${p1.toFixed(2)}W | Kamar2=${p2.toFixed(2)}W`);
+                setStatus(`✅ Data terkirim!`, 'success');
+            } catch (e) {
+                log(`❌ Error: ${e.message}`);
+            }
+        };
+
+        // ============ 5. OTOMATIS ============
+        let interval;
+        window.mulaiOtomatis = function() {
+            if (interval) clearInterval(interval);
+            window.kirimDataDummy();
+            interval = setInterval(window.kirimDataDummy, 5000);
+            log('🔄 Otomatis berjalan (tiap 5 detik)');
+        };
+        window.hentikan = function() {
+            if (interval) {
+                clearInterval(interval);
+                interval = null;
+                log('⏹ Dihentikan');
+            }
+        };
+
+        // ============ 6. AUTO RUN ============
+        log('🔥 Siap!');
+        log('📌 Klik "Minta Izin Notifikasi" untuk setup FCM');
+
+        getToken(messaging, { vapidKey: VAPID_KEY }).then(token => {
+            if (token) {
+                tokenBox.innerText = token;
+                setStatus('✅ Token sudah ada!', 'success');
+                log(`📱 Token ditemukan: ${token.substring(0, 30)}...`);
+            } else {
+                setStatus('ℹ️ Belum ada token. Klik tombol "Minta Izin"', 'info');
+            }
+        }).catch(() => {
+            setStatus('ℹ️ Belum ada token. Klik tombol "Minta Izin"', 'info');
+        });
+
+        // ============ EXPOSE KE GLOBAL ============
+        window.db = db;
+        window.messaging = messaging;
+        window.log = log;
+
+        console.log('✅ FCM Test ready!');
+    </script>
+</body>
+
+</html>
