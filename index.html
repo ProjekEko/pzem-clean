@@ -1,259 +1,655 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="id">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sistem Monitoring Kos - PZEM</title>
+    <title>Sistem Monitoring Kos</title>
+    <link rel="icon" type="image/png" href="gambar/images.png" />
     <style>
+        /* ============ RESET & BASE ============ */
         * {
+            margin: 0;
+            padding: 0;
             box-sizing: border-box;
         }
+
         body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            max-width: 800px;
-            margin: 20px auto;
-            padding: 0 20px;
-            background: #f5f7fa;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f0f4fe;
+            color: #1a1a2e;
+            min-height: 100vh;
+            padding: 24px 16px;
+            background-image: radial-gradient(ellipse at 10% 20%, rgba(79, 140, 255, 0.06) 0%, transparent 60%),
+                              radial-gradient(ellipse at 90% 80%, rgba(124, 58, 237, 0.04) 0%, transparent 60%);
         }
-        .header {
-            background: linear-gradient(135deg, #1a237e, #0d47a1);
-            color: white;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            text-align: center;
+
+        /* ============ CONTAINER ============ */
+        .app-container {
+            max-width: 860px;
+            margin: 0 auto;
         }
-        .header h1 {
-            margin: 0;
-            font-size: 24px;
+
+        /* ============ HEADER ============ */
+        .app-header {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 24px;
+            padding: 24px 28px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            box-shadow: 0 8px 32px rgba(0, 20, 80, 0.06);
         }
-        .header p {
-            margin: 5px 0 0;
-            opacity: 0.8;
+
+        .header-left h1 {
+            font-size: 26px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #1a1a3e, #4f6ef7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+        }
+
+        .header-left p {
             font-size: 14px;
+            color: #6b7280;
+            font-weight: 400;
+            margin-top: 2px;
         }
-        .status {
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin: 10px 0;
-            font-weight: 500;
+
+        .header-badge {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
         }
-        .success {
-            background: #d4edda;
-            color: #155724;
-            border-left: 4px solid #28a745;
-        }
-        .error {
-            background: #f8d7da;
-            color: #721c24;
-            border-left: 4px solid #dc3545;
-        }
-        .info {
-            background: #d1ecf1;
-            color: #0c5460;
-            border-left: 4px solid #17a2b8;
-        }
-        .warning {
-            background: #fff3cd;
-            color: #856404;
-            border-left: 4px solid #ffc107;
-        }
-        .token-box {
-            background: #e8ecf1;
-            padding: 12px;
-            border-radius: 6px;
+
+        .badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(0, 0, 0, 0.04);
+            padding: 6px 14px;
+            border-radius: 40px;
             font-size: 12px;
-            word-break: break-all;
-            font-family: monospace;
-            margin: 5px 0;
+            font-weight: 500;
+            color: #374151;
         }
-        .data-box {
-            background: white;
+
+        .badge .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .dot-green { background: #22c55e; box-shadow: 0 0 8px rgba(34, 197, 94, 0.25); }
+        .dot-yellow { background: #eab308; box-shadow: 0 0 8px rgba(234, 179, 8, 0.25); }
+        .dot-red { background: #ef4444; box-shadow: 0 0 8px rgba(239, 68, 68, 0.25); }
+        .dot-gray { background: #9ca3af; }
+
+        /* ============ STATUS CARD ============ */
+        .status-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 16px;
             padding: 16px 20px;
-            border-radius: 10px;
-            margin: 12px 0;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            border-left: 4px solid #0d47a1;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            box-shadow: 0 4px 16px rgba(0, 20, 80, 0.04);
         }
-        .data-box h3 {
-            margin: 0 0 10px;
-            color: #1a237e;
+
+        .status-card .status-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
-        .data-grid {
+
+        .status-card .status-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .status-card .status-icon.online {
+            background: rgba(34, 197, 94, 0.12);
+            color: #16a34a;
+        }
+
+        .status-card .status-icon.offline {
+            background: rgba(239, 68, 68, 0.10);
+            color: #dc2626;
+        }
+
+        .status-card .status-icon.waiting {
+            background: rgba(234, 179, 8, 0.10);
+            color: #ca8a04;
+        }
+
+        .status-text {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a1a2e;
+        }
+
+        .status-sub {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        /* ============ TOKEN BOX ============ */
+        .token-box {
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(0, 0, 0, 0.04);
+            border-radius: 12px;
+            padding: 10px 16px;
+            font-size: 11px;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            color: #9ca3af;
+            word-break: break-all;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .token-box.active {
+            color: #1f2937;
+            border-color: rgba(34, 197, 94, 0.15);
+            background: rgba(34, 197, 94, 0.04);
+        }
+
+        /* ============ SECTION TITLE ============ */
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a2e;
+            margin: 28px 0 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(to right, rgba(0, 0, 0, 0.06), transparent);
+        }
+
+        /* ============ DATA CARDS ============ */
+        .data-grid-cards {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 5px 20px;
+            gap: 16px;
+            margin-bottom: 8px;
         }
-        .data-grid p {
-            margin: 4px 0;
+
+        @media (max-width: 600px) {
+            .data-grid-cards {
+                grid-template-columns: 1fr;
+            }
         }
-        .alert-text {
-            font-weight: 700;
-            font-size: 16px;
-            padding: 4px 12px;
+
+        .data-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
             border-radius: 20px;
+            padding: 22px 24px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(0, 20, 80, 0.04);
+        }
+
+        .data-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            border-radius: 20px 20px 0 0;
+        }
+
+        .data-card.card-1::before {
+            background: linear-gradient(90deg, #4f8cff, #7c3aed);
+        }
+
+        .data-card.card-2::before {
+            background: linear-gradient(90deg, #f59e0b, #ef4444);
+        }
+
+        .data-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(79, 140, 255, 0.15);
+            box-shadow: 0 12px 40px rgba(0, 20, 80, 0.08);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        .card-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a2e;
+        }
+
+        .card-header .room-badge {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 4px 12px;
+            border-radius: 40px;
+            background: rgba(0, 0, 0, 0.04);
+            color: #6b7280;
+        }
+
+        .card-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px 16px;
+        }
+
+        .metric {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .metric .label {
+            font-size: 11px;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            font-weight: 500;
+        }
+
+        .metric .value {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1a1a2e;
+            letter-spacing: -0.3px;
+        }
+
+        .metric .value .unit {
+            font-size: 13px;
+            font-weight: 400;
+            color: #9ca3af;
+            margin-left: 2px;
+        }
+
+        .metric .value.watt { color: #2563eb; }
+        .metric .value.amp { color: #7c3aed; }
+        .metric .value.volt { color: #059669; }
+        .metric .value.kwh { color: #d97706; }
+
+        .card-footer {
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px solid rgba(0, 0, 0, 0.04);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .relay-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #1f2937;
+        }
+
+        .relay-status .relay-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
             display: inline-block;
         }
-        .normal {
-            background: #d4edda;
-            color: #155724;
+
+        .relay-dot.on { background: #22c55e; box-shadow: 0 0 12px rgba(34, 197, 94, 0.2); }
+        .relay-dot.off { background: #ef4444; box-shadow: 0 0 12px rgba(239, 68, 68, 0.15); }
+
+        /* ============ ALERT STATUS ============ */
+        .alert-status {
+            font-size: 13px;
+            font-weight: 600;
+            padding: 4px 14px;
+            border-radius: 40px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
-        .anomaly {
-            background: #f8d7da;
-            color: #721c24;
-            animation: pulse 1s infinite;
+
+        .alert-status.normal {
+            background: rgba(34, 197, 94, 0.10);
+            color: #16a34a;
         }
-        @keyframes pulse {
-            0% { opacity: 1; }
+
+        .alert-status.warning {
+            background: rgba(234, 179, 8, 0.10);
+            color: #ca8a04;
+            animation: pulse-glow-light 1.5s infinite;
+        }
+
+        .alert-status.danger {
+            background: rgba(239, 68, 68, 0.10);
+            color: #dc2626;
+            animation: pulse-glow-light 1s infinite;
+        }
+
+        .alert-status.info {
+            background: rgba(37, 99, 235, 0.06);
+            color: #6b7280;
+        }
+
+        @keyframes pulse-glow-light {
+            0%, 100% { opacity: 1; }
             50% { opacity: 0.6; }
-            100% { opacity: 1; }
         }
+
+        /* ============ NOTIFICATION POPUP ============ */
+        .notif-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            max-width: 380px;
+            width: 100%;
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .notif-popup {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 16px;
+            padding: 16px 20px;
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.10);
+            pointer-events: auto;
+            animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            transform-origin: bottom right;
+        }
+
+        .notif-popup.danger { border-left: 4px solid #ef4444; }
+        .notif-popup.warning { border-left: 4px solid #eab308; }
+        .notif-popup.success { border-left: 4px solid #22c55e; }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px) scale(0.96); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .notif-popup .notif-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a1a2e;
+        }
+
+        .notif-popup .notif-body {
+            font-size: 13px;
+            color: #4b5563;
+            margin-top: 2px;
+        }
+
+        .notif-popup .notif-time {
+            font-size: 10px;
+            color: #9ca3af;
+            margin-top: 6px;
+            display: block;
+        }
+
+        /* ============ LOG BOX ============ */
         .log-box {
-            background: #1e1e2e;
-            color: #cdd6f4;
-            padding: 16px;
-            border-radius: 8px;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            max-height: 200px;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 16px;
+            padding: 16px 20px;
+            max-height: 180px;
             overflow-y: auto;
-            margin: 10px 0;
-        }
-        .log-box .time {
-            color: #89b4fa;
-        }
-        .log-box .success-text {
-            color: #a6e3a1;
-        }
-        .log-box .error-text {
-            color: #f38ba8;
-        }
-        .log-box .warn-text {
-            color: #f9e2af;
-        }
-        .badge {
-            display: inline-block;
-            background: #e8ecf1;
-            padding: 2px 10px;
-            border-radius: 12px;
+            font-family: 'SF Mono', 'Fira Code', monospace;
             font-size: 12px;
-            margin: 2px;
+            line-height: 1.8;
+            color: #4b5563;
+            margin-top: 8px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(0, 0, 0, 0.04) transparent;
         }
-        .footer {
+
+        .log-box::-webkit-scrollbar { width: 4px; }
+        .log-box::-webkit-scrollbar-track { background: transparent; }
+        .log-box::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.06); border-radius: 4px; }
+
+        .log-entry .time { color: #9ca3af; }
+        .log-entry .success-text { color: #16a34a; }
+        .log-entry .error-text { color: #dc2626; }
+        .log-entry .warn-text { color: #ca8a04; }
+        .log-entry .info-text { color: #2563eb; }
+
+        /* ============ DEBUG TOGGLE ============ */
+        .debug-toggle {
+            font-size: 11px;
+            color: #9ca3af;
+            cursor: pointer;
+            transition: color 0.3s;
+            display: inline-block;
+            margin-top: 12px;
+            letter-spacing: 0.3px;
+        }
+
+        .debug-toggle:hover { color: #6b7280; }
+
+        .debug-section {
+            display: none;
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(0, 0, 0, 0.04);
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-top: 8px;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .debug-section.show { display: flex; }
+
+        .debug-section button {
+            padding: 6px 18px;
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            border-radius: 40px;
+            background: rgba(255, 255, 255, 0.6);
+            color: #374151;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .debug-section button:hover {
+            background: rgba(37, 99, 235, 0.08);
+            border-color: rgba(37, 99, 235, 0.2);
+            color: #1a1a2e;
+        }
+
+        /* ============ FOOTER ============ */
+        .app-footer {
+            margin-top: 40px;
             text-align: center;
             font-size: 12px;
-            color: #888;
-            margin-top: 30px;
-            padding: 10px;
-            border-top: 1px solid #ddd;
+            color: #9ca3af;
+            padding: 16px 0;
+            border-top: 1px solid rgba(0, 0, 0, 0.04);
         }
-        .notif-popup {
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
-            padding: 12px 16px;
-            margin: 8px 0;
-            border-radius: 6px;
-            animation: slideDown 0.3s ease;
-        }
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .debug-section {
-            background: #f0f0f0;
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin: 10px 0;
-            display: none;
-        }
-        .debug-section button {
-            padding: 6px 14px;
-            margin: 3px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-        .btn-test { background: #6c757d; color: white; }
-        .btn-danger { background: #dc3545; color: white; }
-        .btn-warning { background: #ffc107; color: black; }
-        .btn-secondary { background: #6c757d; color: white; }
-        /* Toggle debug */
-        .debug-toggle {
-            font-size: 12px;
-            color: #888;
-            cursor: pointer;
-            text-decoration: underline;
-            margin: 5px 0;
-            display: inline-block;
+
+        /* ============ RESPONSIVE ============ */
+        @media (max-width: 600px) {
+            body { padding: 16px 12px; }
+            .app-header { padding: 18px 20px; flex-direction: column; align-items: flex-start; }
+            .header-left h1 { font-size: 22px; }
+            .data-card { padding: 18px; }
+            .metric .value { font-size: 19px; }
+            .notif-container { right: 12px; left: 12px; max-width: none; }
+            .badge { font-size: 10px; padding: 4px 10px; }
         }
     </style>
 </head>
 
 <body>
 
-    <div class="header">
-        <h1>⚡ Sistem Monitoring Kos</h1>
-        <p>Real-time Monitoring Listrik & Deteksi Anomali</p>
-    </div>
+    <div class="app-container">
 
-    <div id="statusBox" class="status info">🔄 Inisialisasi sistem...</div>
+        <!-- ==================== HEADER ==================== -->
+        <header class="app-header">
+            <div class="header-left">
+                <h1>Sistem Monitoring Kos</h1>
+                <p>Real-time monitoring &amp; deteksi anomali listrik</p>
+            </div>
+            <div class="header-badge">
+                <span class="badge">
+                    <span class="dot dot-green" id="esp32Dot"></span>
+                    <span id="esp32Label">ESP32 — Menunggu</span>
+                </span>
+                <span class="badge">
+                    <span class="dot dot-yellow" id="tokenDot"></span>
+                    <span id="tokenLabel">Token — Inaktif</span>
+                </span>
+            </div>
+        </header>
 
-    <div style="margin: 10px 0;">
-        <span class="badge">📱 Status Token: <span id="tokenStatus">Belum ada</span></span>
-        <span class="badge">🟢 Sistem: <span id="systemStatus">Online</span></span>
-    </div>
-
-    <div id="tokenBox" class="token-box" style="font-size:11px;">⏳ Menunggu token...</div>
-
-    <!-- ============ DEBUG SECTION (Tersembunyi) ============ -->
-    <div class="debug-toggle" onclick="toggleDebug()">🔧 Tampilkan Debug</div>
-    <div id="debugSection" class="debug-section">
-        <button class="btn-test" onclick="kirimNotifikasiTest()">🔔 Test Notif</button>
-        <button class="btn-danger" onclick="kirimDataDummy()">📤 Dummy Manual</button>
-        <button class="btn-warning" onclick="mulaiOtomatis()">🔄 Auto Dummy</button>
-        <button class="btn-secondary" onclick="hentikan()">⏹ Stop</button>
-    </div>
-
-    <hr style="border: none; border-top: 2px solid #e0e0e0; margin: 20px 0;" />
-
-    <h2 style="color: #1a237e;">📊 Data Real-time</h2>
-
-    <div class="data-box">
-        <h3>🏠 Kamar 1</h3>
-        <div class="data-grid">
-            <p>⚡ Daya: <strong id="daya1">0</strong> W</p>
-            <p>🔌 Arus: <strong id="arus1">0</strong> A</p>
-            <p>⛰️ Tegangan: <strong id="tegangan1">0</strong> V</p>
-            <p>🔋 Energi: <strong id="energi1">0</strong> kWh</p>
+        <!-- ==================== STATUS CARD ==================== -->
+        <div class="status-card" id="statusCard">
+            <div class="status-left">
+                <div class="status-icon waiting" id="statusIcon">⏳</div>
+                <div>
+                    <div class="status-text" id="statusText">Menunggu koneksi ke ESP32...</div>
+                    <div class="status-sub" id="statusSub">Sistem akan aktif setelah perangkat terhubung</div>
+                </div>
+            </div>
+            <div style="font-size:12px; color:#9ca3af;" id="lastUpdate">—</div>
         </div>
-        <p style="margin-top: 8px;">📢 Status: <span id="alert1" class="alert-text normal">Normal</span></p>
-    </div>
 
-    <div class="data-box" style="border-left-color: #e65100;">
-        <h3>🏠 Kamar 2</h3>
-        <div class="data-grid">
-            <p>⚡ Daya: <strong id="daya2">0</strong> W</p>
-            <p>🔌 Arus: <strong id="arus2">0</strong> A</p>
-            <p>⛰️ Tegangan: <strong id="tegangan2">0</strong> V</p>
-            <p>🔋 Energi: <strong id="energi2">0</strong> kWh</p>
+        <!-- ==================== TOKEN BOX ==================== -->
+        <div class="token-box" id="tokenBox">⏳ Menunggu token notifikasi...</div>
+
+        <!-- ==================== DEBUG ==================== -->
+        <div class="debug-toggle" onclick="toggleDebug()">⚙️ Debug</div>
+        <div class="debug-section" id="debugSection">
+            <button onclick="kirimNotifikasiTest()">📨 Test Notifikasi</button>
         </div>
-        <p style="margin-top: 8px;">📢 Status: <span id="alert2" class="alert-text normal">Normal</span></p>
-    </div>
 
-    <hr style="border: none; border-top: 2px solid #e0e0e0; margin: 20px 0;" />
+        <!-- ==================== DATA CARDS ==================== -->
+        <div class="section-title">📊 Data Real-time</div>
 
-    <div id="notifContainer"></div>
+        <div class="data-grid-cards">
 
-    <h3 style="color: #1a237e;">📋 Log Sistem</h3>
-    <div class="log-box" id="log">
-        <div><span class="time">[INIT]</span> 🔥 Sistem monitoring siap...</div>
-        <div><span class="time">[INIT]</span> ⏳ Menunggu koneksi ke Firebase...</div>
-    </div>
+            <!-- KAMAR 1 -->
+            <div class="data-card card-1">
+                <div class="card-header">
+                    <h3>🏠 Kamar 1</h3>
+                    <span class="room-badge">Titik A</span>
+                </div>
+                <div class="card-metrics">
+                    <div class="metric">
+                        <span class="label">Daya</span>
+                        <span class="value watt" id="daya1">0<span class="unit">W</span></span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">Arus</span>
+                        <span class="value amp" id="arus1">0<span class="unit">A</span></span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">Tegangan</span>
+                        <span class="value volt" id="tegangan1">0<span class="unit">V</span></span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">Energi</span>
+                        <span class="value kwh" id="energi1">0<span class="unit">kWh</span></span>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <span class="relay-status">
+                        <span class="relay-dot off" id="relayDot1"></span>
+                        <span id="relayLabel1">Relay OFF</span>
+                    </span>
+                    <span class="alert-status info" id="alert1">Menunggu data</span>
+                </div>
+            </div>
 
-    <div class="footer">
-        © 2026 Sistem Monitoring Kos Berbasis IoT | FCM Notifikasi
+            <!-- KAMAR 2 -->
+            <div class="data-card card-2">
+                <div class="card-header">
+                    <h3>🏠 Kamar 2</h3>
+                    <span class="room-badge">Titik B</span>
+                </div>
+                <div class="card-metrics">
+                    <div class="metric">
+                        <span class="label">Daya</span>
+                        <span class="value watt" id="daya2">0<span class="unit">W</span></span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">Arus</span>
+                        <span class="value amp" id="arus2">0<span class="unit">A</span></span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">Tegangan</span>
+                        <span class="value volt" id="tegangan2">0<span class="unit">V</span></span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">Energi</span>
+                        <span class="value kwh" id="energi2">0<span class="unit">kWh</span></span>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <span class="relay-status">
+                        <span class="relay-dot off" id="relayDot2"></span>
+                        <span id="relayLabel2">Relay OFF</span>
+                    </span>
+                    <span class="alert-status info" id="alert2">Menunggu data</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ==================== LOG ==================== -->
+        <div class="section-title" style="margin-top: 28px;">📋 Log Sistem</div>
+        <div class="log-box" id="log">
+            <div class="log-entry"><span class="time">[INIT]</span> 🔥 EcoMonitor siap</div>
+            <div class="log-entry"><span class="time">[INIT]</span> ⏳ Menunggu data dari ESP32...</div>
+        </div>
+
+        <!-- ==================== NOTIFICATION CONTAINER ==================== -->
+        <div class="notif-container" id="notifContainer"></div>
+
+        <!-- ==================== FOOTER ==================== -->
+        <div class="app-footer">
+            EcoMonitor &bull; 2026 &bull; IoT Monitoring System
+        </div>
+
     </div>
 
     <!-- ============ FIREBASE SDK ============ -->
@@ -268,11 +664,12 @@
     </script>
 
     <script type="module">
+        // ============ IMPORTS ============
         import { initializeApp } from "firebase/app";
         import { getDatabase, ref, set, get, onValue } from "firebase/database";
         import { getMessaging, getToken, onMessage } from "firebase/messaging";
 
-        // ============ CONFIG FIREBASE ============
+        // ============ FIREBASE CONFIG ============
         const firebaseConfig = {
             apiKey: "AIzaSyDPp_SyvQJApKckpT-YpGBbfMMBAkpvj7A",
             authDomain: "pzemm-6b93a.firebaseapp.com",
@@ -289,56 +686,61 @@
         const db = getDatabase(app);
         const messaging = getMessaging(app);
 
-        // ============ DOM ELEMENTS ============
-        const logEl = document.getElementById('log');
-        const statusBox = document.getElementById('statusBox');
-        const tokenBox = document.getElementById('tokenBox');
-        const tokenStatus = document.getElementById('tokenStatus');
-        const systemStatus = document.getElementById('systemStatus');
-        const notifContainer = document.getElementById('notifContainer');
+        // ============ DOM REFS ============
+        const $ = id => document.getElementById(id);
+        const logEl = $('log');
+        const statusText = $('statusText');
+        const statusSub = $('statusSub');
+        const statusIcon = $('statusIcon');
+        const lastUpdate = $('lastUpdate');
+        const tokenBox = $('tokenBox');
+        const esp32Label = $('esp32Label');
+        const esp32Dot = $('esp32Dot');
+        const tokenLabel = $('tokenLabel');
+        const tokenDot = $('tokenDot');
+        const notifContainer = $('notifContainer');
 
-        const daya1 = document.getElementById('daya1');
-        const arus1 = document.getElementById('arus1');
-        const tegangan1 = document.getElementById('tegangan1');
-        const energi1 = document.getElementById('energi1');
-        const alert1 = document.getElementById('alert1');
-        const daya2 = document.getElementById('daya2');
-        const arus2 = document.getElementById('arus2');
-        const tegangan2 = document.getElementById('tegangan2');
-        const energi2 = document.getElementById('energi2');
-        const alert2 = document.getElementById('alert2');
+        const daya1 = $('daya1'); const arus1 = $('arus1'); const tegangan1 = $('tegangan1'); const energi1 = $('energi1');
+        const relayDot1 = $('relayDot1'); const relayLabel1 = $('relayLabel1'); const alert1 = $('alert1');
+        const daya2 = $('daya2'); const arus2 = $('arus2'); const tegangan2 = $('tegangan2'); const energi2 = $('energi2');
+        const relayDot2 = $('relayDot2'); const relayLabel2 = $('relayLabel2'); const alert2 = $('alert2');
 
         let lastAlert1 = 'Normal';
         let lastAlert2 = 'Normal';
-        let isFirstLoad = true;
+        let esp32Online = false;
 
+        // ============ LOG FUNCTION ============
         function log(msg, type = 'info') {
             const time = new Date().toLocaleTimeString('id-ID', { hour12: false });
-            const colors = {
-                info: '',
-                success: 'success-text',
-                error: 'error-text',
-                warn: 'warn-text'
-            };
-            const cls = colors[type] || '';
+            const cls = type === 'success' ? 'success-text' :
+                        type === 'error' ? 'error-text' :
+                        type === 'warn' ? 'warn-text' : 'info-text';
             const div = document.createElement('div');
+            div.className = 'log-entry';
             div.innerHTML = `<span class="time">[${time}]</span> <span class="${cls}">${msg}</span>`;
             logEl.appendChild(div);
             logEl.scrollTop = logEl.scrollHeight;
         }
 
-        function setStatus(msg, type = 'info') {
-            statusBox.innerText = msg;
-            statusBox.className = 'status ' + type;
+        // ============ SET STATUS ============
+        function setStatus(icon, text, sub, type = 'waiting') {
+            statusIcon.textContent = icon;
+            statusIcon.className = 'status-icon ' + type;
+            statusText.textContent = text;
+            statusSub.textContent = sub || '';
         }
 
-        // ============ TAMPILKAN NOTIFIKASI DI WEB ============
-        function showNotifInWeb(title, body) {
+        // ============ SHOW NOTIFICATION IN WEB ============
+        function showNotifInWeb(title, body, type = 'danger') {
             const div = document.createElement('div');
-            div.className = 'notif-popup';
-            div.innerHTML = `<strong>🔔 ${title}</strong><br>${body}`;
+            div.className = `notif-popup ${type}`;
+            div.innerHTML = `
+                <div class="notif-title">${title}</div>
+                <div class="notif-body">${body}</div>
+                <span class="notif-time">${new Date().toLocaleTimeString('id-ID', { hour12: false })}</span>
+            `;
             notifContainer.prepend(div);
-            setTimeout(() => div.remove(), 20000);
+            setTimeout(() => div.remove(), 18000);
         }
 
         // ============ KIRIM NOTIFIKASI OTOMATIS ============
@@ -374,31 +776,63 @@
 
                 if (success > 0) {
                     log(`📤 Notifikasi peringatan terkirim ke ${success} perangkat`, 'success');
-                    showNotifInWeb(`🚨 PERINGATAN ${kamar}`, pesan);
+                    showNotifInWeb(`🚨 PERINGATAN ${kamar}`, pesan, 'danger');
                 }
             } catch (e) {
                 log(`❌ Error kirim notifikasi: ${e.message}`, 'error');
             }
         }
 
+        // ============ DETEKSI ESP32 ============
+        onValue(ref(db, '/sistem/status'), (snapshot) => {
+            const status = snapshot.val();
+            if (status === 'ONLINE') {
+                esp32Online = true;
+                esp32Dot.className = 'dot dot-green';
+                esp32Label.textContent = 'ESP32 — Online';
+                setStatus('🟢', 'ESP32 Online! Data real-time aktif.', 'Sistem monitoring berjalan', 'online');
+                log('✅ ESP32 terdeteksi! Monitoring aktif.', 'success');
+            } else {
+                esp32Online = false;
+                esp32Dot.className = 'dot dot-gray';
+                esp32Label.textContent = 'ESP32 — Menunggu';
+                setStatus('⏳', 'Menunggu koneksi ke ESP32...', 'Pastikan perangkat terhubung ke internet', 'waiting');
+            }
+        });
+
+        // ============ UPDATE TIMESTAMP ============
+        onValue(ref(db, '/sistem/lastUpdate'), (snapshot) => {
+            const ts = snapshot.val();
+            if (ts) {
+                const d = new Date(ts);
+                lastUpdate.textContent = d.toLocaleTimeString('id-ID', { hour12: false });
+            }
+        });
+
         // ============ LISTENER DATA REAL-TIME ============
         // Kamar 1
         onValue(ref(db, '/kamar_1'), (snapshot) => {
             const data = snapshot.val();
             if (data) {
-                daya1.innerText = data.daya?.toFixed(2) || 0;
-                arus1.innerText = data.arus?.toFixed(2) || 0;
-                tegangan1.innerText = data.tegangan?.toFixed(1) || 0;
-                energi1.innerText = data.energi?.toFixed(3) || 0;
+                daya1.innerHTML = `${data.daya?.toFixed(2) || 0}<span class="unit">W</span>`;
+                arus1.innerHTML = `${data.arus?.toFixed(2) || 0}<span class="unit">A</span>`;
+                tegangan1.innerHTML = `${data.tegangan?.toFixed(1) || 0}<span class="unit">V</span>`;
+                energi1.innerHTML = `${data.energi?.toFixed(3) || 0}<span class="unit">kWh</span>`;
+                const on = data.relay === true;
+                relayDot1.className = `relay-dot ${on ? 'on' : 'off'}`;
+                relayLabel1.textContent = `Relay ${on ? 'ON' : 'OFF'}`;
             }
         });
 
         onValue(ref(db, '/alerts/kamar_1'), async (snapshot) => {
             const val = snapshot.val() || 'Normal';
-            alert1.innerText = val;
-            alert1.className = 'alert-text ' + (val.includes('berlebih') ? 'anomaly' : 'normal');
-
-            if (val.includes('berlebih') && lastAlert1 !== val) {
+            alert1.textContent = val;
+            alert1.className = 'alert-status ' + (
+                val.includes('berlebih') ? 'danger' :
+                val.includes('Normal') ? 'normal' :
+                val.includes('Warning') ? 'warning' : 'info'
+            );
+            if (val.includes('berlebih') && lastAlert1 !== val && esp32Online) {
                 await kirimNotifikasiOtomatis('Kamar 1', val);
                 log(`🚨 Anomali terdeteksi di Kamar 1: ${val}`, 'warn');
             }
@@ -409,19 +843,25 @@
         onValue(ref(db, '/kamar_2'), (snapshot) => {
             const data = snapshot.val();
             if (data) {
-                daya2.innerText = data.daya?.toFixed(2) || 0;
-                arus2.innerText = data.arus?.toFixed(2) || 0;
-                tegangan2.innerText = data.tegangan?.toFixed(1) || 0;
-                energi2.innerText = data.energi?.toFixed(3) || 0;
+                daya2.innerHTML = `${data.daya?.toFixed(2) || 0}<span class="unit">W</span>`;
+                arus2.innerHTML = `${data.arus?.toFixed(2) || 0}<span class="unit">A</span>`;
+                tegangan2.innerHTML = `${data.tegangan?.toFixed(1) || 0}<span class="unit">V</span>`;
+                energi2.innerHTML = `${data.energi?.toFixed(3) || 0}<span class="unit">kWh</span>`;
+                const on = data.relay === true;
+                relayDot2.className = `relay-dot ${on ? 'on' : 'off'}`;
+                relayLabel2.textContent = `Relay ${on ? 'ON' : 'OFF'}`;
             }
         });
 
         onValue(ref(db, '/alerts/kamar_2'), async (snapshot) => {
             const val = snapshot.val() || 'Normal';
-            alert2.innerText = val;
-            alert2.className = 'alert-text ' + (val.includes('berlebih') ? 'anomaly' : 'normal');
-
-            if (val.includes('berlebih') && lastAlert2 !== val) {
+            alert2.textContent = val;
+            alert2.className = 'alert-status ' + (
+                val.includes('berlebih') ? 'danger' :
+                val.includes('Normal') ? 'normal' :
+                val.includes('Warning') ? 'warning' : 'info'
+            );
+            if (val.includes('berlebih') && lastAlert2 !== val && esp32Online) {
                 await kirimNotifikasiOtomatis('Kamar 2', val);
                 log(`🚨 Anomali terdeteksi di Kamar 2: ${val}`, 'warn');
             }
@@ -438,27 +878,19 @@
                         vapidKey: VAPID_KEY,
                         serviceWorkerRegistration: registration
                     });
-
                     if (token) {
-                        tokenBox.innerText = token;
-                        tokenStatus.innerText = '✅ Aktif';
-                        setStatus('✅ Sistem siap! Monitoring berjalan.', 'success');
+                        tokenBox.textContent = `🔑 Token: ${token}`;
+                        tokenBox.className = 'token-box active';
+                        tokenDot.className = 'dot dot-green';
+                        tokenLabel.textContent = 'Token — Aktif';
                         log('✅ FCM token berhasil didapatkan', 'success');
-                        log(`📱 Token: ${token.substring(0, 30)}...`, 'info');
-
                         const tokenPath = '/fcm_tokens/' + token.replace(/[.#$\/\[\]]/g, '_');
                         await set(ref(db, tokenPath), { token, timestamp: Date.now() });
                         log('✅ Token tersimpan di database', 'success');
-
-                        // Start dummy data setelah token siap
-                        if (isFirstLoad) {
-                            isFirstLoad = false;
-                            mulaiOtomatis();
-                        }
                     }
                 } else {
-                    tokenStatus.innerText = '⚠️ Ditolak';
-                    setStatus('⚠️ Izin notifikasi ditolak. Aktifkan di pengaturan browser.', 'error');
+                    tokenDot.className = 'dot dot-red';
+                    tokenLabel.textContent = 'Token — Ditolak';
                     log('❌ Izin notifikasi ditolak pengguna', 'error');
                 }
             } catch (error) {
@@ -468,13 +900,10 @@
 
         // ============ AUTO RUN SAAT LOAD ============
         window.addEventListener('load', async () => {
-            log('🔥 Inisialisasi sistem monitoring...', 'info');
-            systemStatus.innerText = '🔄 Inisialisasi';
-
+            log('🔥 EcoMonitor inisialisasi...', 'info');
             try {
                 await navigator.serviceWorker.register('/firebase-messaging-sw.js');
                 log('✅ Service Worker terdaftar', 'success');
-
                 const registration = await navigator.serviceWorker.ready;
                 log('✅ Service Worker aktif', 'success');
 
@@ -483,20 +912,14 @@
                         vapidKey: VAPID_KEY,
                         serviceWorkerRegistration: registration
                     });
-
                     if (token) {
-                        tokenBox.innerText = token;
-                        tokenStatus.innerText = '✅ Aktif';
-                        setStatus('✅ Sistem siap! Monitoring berjalan.', 'success');
+                        tokenBox.textContent = `🔑 Token: ${token}`;
+                        tokenBox.className = 'token-box active';
+                        tokenDot.className = 'dot dot-green';
+                        tokenLabel.textContent = 'Token — Aktif';
                         log('✅ Token ditemukan (sudah ada sebelumnya)', 'success');
-
                         const tokenPath = '/fcm_tokens/' + token.replace(/[.#$\/\[\]]/g, '_');
                         await set(ref(db, tokenPath), { token, timestamp: Date.now() });
-
-                        if (isFirstLoad) {
-                            isFirstLoad = false;
-                            mulaiOtomatis();
-                        }
                     } else {
                         log('⏳ Belum ada token, meminta izin...', 'info');
                         await autoRequestPermission();
@@ -506,11 +929,11 @@
                     await autoRequestPermission();
                 }
 
-                systemStatus.innerText = '🟢 Online';
+                setStatus('⏳', 'Menunggu koneksi ke ESP32...', 'Pastikan perangkat terhubung ke internet', 'waiting');
+                log('✅ Sistem siap! Menunggu ESP32 mengirim data.', 'success');
 
             } catch (error) {
                 log(`❌ Error inisialisasi: ${error.message}`, 'error');
-                setStatus(`❌ Error: ${error.message}`, 'error');
                 setTimeout(autoRequestPermission, 3000);
             }
         });
@@ -520,68 +943,10 @@
             const title = payload.notification?.title || 'Notifikasi';
             const body = payload.notification?.body || '';
             log(`🔔 Notifikasi diterima: ${title}`, 'info');
-            showNotifInWeb(title, body);
+            showNotifInWeb(title, body, 'warning');
         });
 
-        // ============ FUNGSI DUMMY DATA OTOMATIS ============
-        const DB_URL = 'https://pzemm-6b93a-default-rtdb.firebaseio.com/';
-        let dummyInterval = null;
-
-        async function kirimDataDummy() {
-            try {
-                const t1 = 215 + Math.random() * 15;
-                const a1 = 0.5 + Math.random() * 5;
-                const p1 = t1 * a1;
-                const t2 = 215 + Math.random() * 15;
-                const a2 = 0.5 + Math.random() * 5;
-                const p2 = t2 * a2;
-
-                const alert1Val = p1 > 500 ? `⚠️ Daya berlebih: ${p1.toFixed(2)} W` : 'Normal';
-                const alert2Val = p2 > 500 ? `⚠️ Daya berlebih: ${p2.toFixed(2)} W` : 'Normal';
-
-                await Promise.all([
-                    fetch(DB_URL + 'kamar_1.json', {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ tegangan: parseFloat(t1.toFixed(1)), arus: parseFloat(a1.toFixed(2)), daya: parseFloat(p1.toFixed(2)), energi: parseFloat((p1 * 0.001).toFixed(4)), timestamp: Date.now() })
-                    }),
-                    fetch(DB_URL + 'kamar_2.json', {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ tegangan: parseFloat(t2.toFixed(1)), arus: parseFloat(a2.toFixed(2)), daya: parseFloat(p2.toFixed(2)), energi: parseFloat((p2 * 0.001).toFixed(4)), timestamp: Date.now() })
-                    }),
-                    fetch(DB_URL + 'alerts/kamar_1.json', {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(alert1Val)
-                    }),
-                    fetch(DB_URL + 'alerts/kamar_2.json', {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(alert2Val)
-                    })
-                ]);
-            } catch (e) {
-                log(`❌ Error kirim data dummy: ${e.message}`, 'error');
-            }
-        }
-
-        function mulaiOtomatis() {
-            if (dummyInterval) clearInterval(dummyInterval);
-            kirimDataDummy();
-            dummyInterval = setInterval(kirimDataDummy, 5000);
-            log('🔄 Data dummy otomatis aktif (interval 5 detik)', 'info');
-        }
-
-        function hentikan() {
-            if (dummyInterval) {
-                clearInterval(dummyInterval);
-                dummyInterval = null;
-                log('⏹ Data dummy dihentikan', 'info');
-            }
-        }
-
-        // ============ DEBUG FUNCTIONS (Window) ============
+        // ============ DEBUG FUNCTIONS ============
         window.kirimNotifikasiTest = async function() {
             try {
                 const snapshot = await get(ref(db, '/fcm_tokens'));
@@ -590,7 +955,6 @@
                     log('❌ Belum ada token terdaftar', 'error');
                     return;
                 }
-
                 const tokenList = Object.values(tokensData).map(t => t.token);
                 let success = 0;
                 for (const token of tokenList) {
@@ -612,17 +976,13 @@
             }
         };
 
-        window.kirimDataDummy = kirimDataDummy;
-        window.mulaiOtomatis = mulaiOtomatis;
-        window.hentikan = hentikan;
-
         window.toggleDebug = function() {
             const el = document.getElementById('debugSection');
-            el.style.display = el.style.display === 'block' ? 'none' : 'block';
+            el.classList.toggle('show');
         };
 
-        log('🔥 Sistem siap menunggu data dari sensor...', 'info');
+        log('🔥 Sistem siap menunggu data dari ESP32...', 'info');
     </script>
-</body>
 
+</body>
 </html>
