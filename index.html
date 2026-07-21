@@ -858,7 +858,6 @@
                 esp32Online = false;
                 esp32Dot.className = 'dot dot-gray';
                 esp32Label.textContent = 'ESP32 — Menunggu';
-                // Jangan set status di sini, biarkan default
             }
         });
 
@@ -894,9 +893,17 @@
                 val.includes('Normal') ? 'normal' :
                 val.includes('Warning') ? 'warning' : 'info'
             );
-            if (val.includes('berlebih') && lastAlert1 !== val && esp32Online) {
+
+            // ============ KIRIM NOTIFIKASI UNTUK SEMUA STATUS PENTING ============
+            const isAnomaly = val.includes('berlebih') || 
+                              val.includes('RELAY_TRIP') || 
+                              val.includes('TOKEN_HABIS') ||
+                              val.includes('KRITIS') ||
+                              val.includes('WARNING');
+            
+            if (isAnomaly && lastAlert1 !== val && esp32Online) {
                 await kirimNotifikasiOtomatis('Kamar 1', val);
-                log(`🚨 Anomali terdeteksi di Kamar 1: ${val}`, 'warn');
+                log(`🚨 Status berubah: ${val}`, 'warn');
             }
             lastAlert1 = val;
         });
@@ -923,9 +930,16 @@
                 val.includes('Normal') ? 'normal' :
                 val.includes('Warning') ? 'warning' : 'info'
             );
-            if (val.includes('berlebih') && lastAlert2 !== val && esp32Online) {
+
+            const isAnomaly = val.includes('berlebih') || 
+                              val.includes('RELAY_TRIP') || 
+                              val.includes('TOKEN_HABIS') ||
+                              val.includes('KRITIS') ||
+                              val.includes('WARNING');
+            
+            if (isAnomaly && lastAlert2 !== val && esp32Online) {
                 await kirimNotifikasiOtomatis('Kamar 2', val);
-                log(`🚨 Anomali terdeteksi di Kamar 2: ${val}`, 'warn');
+                log(`🚨 Status berubah: ${val}`, 'warn');
             }
             lastAlert2 = val;
         });
@@ -991,9 +1005,6 @@
                     await autoRequestPermission();
                 }
 
-                // ============ JANGAN OVERRIDE STATUS DI SINI! ============
-                // Biarkan listener yang atur status.
-                // Tapi kita set status default "Menunggu" hanya jika belum ada data.
                 if (!esp32Online) {
                     setStatus('⏳', 'Menunggu koneksi ke ESP32...', 'Pastikan perangkat terhubung ke internet', 'waiting');
                 }
