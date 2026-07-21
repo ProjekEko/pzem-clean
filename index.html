@@ -312,6 +312,12 @@
         .metric .value.kwh {
             color: #d97706;
         }
+        .metric .value.freq {
+            color: #8b5cf6;
+        }
+        .metric .value.pf {
+            color: #ec4899;
+        }
 
         .card-footer {
             margin-top: 16px;
@@ -586,7 +592,7 @@
 
         <header class="app-header">
             <div class="header-left">
-                <h1>Sistem Monitoring Kos</h1>
+                <h1>⚡ Sistem Monitoring Kos</h1>
                 <p>Real-time monitoring &amp; deteksi anomali listrik</p>
             </div>
             <div class="header-badge">
@@ -619,13 +625,14 @@
             <button onclick="kirimNotifikasiTest()">📨 Test Notifikasi</button>
         </div>
 
-        <div class="section-title">Data Real-time</div>
+        <div class="section-title">📊 Data Real-time</div>
 
         <div class="data-grid-cards">
 
+            <!-- KAMAR 1 -->
             <div class="data-card card-1">
                 <div class="card-header">
-                    <h3>Kamar 1</h3>
+                    <h3>🏠 Kamar 1</h3>
                     <span class="room-badge">Titik A</span>
                 </div>
                 <div class="card-metrics">
@@ -645,6 +652,14 @@
                         <span class="label">Energi</span>
                         <span class="value kwh" id="energi1">0<span class="unit">kWh</span></span>
                     </div>
+                    <div class="metric">
+                        <span class="label">Frekuensi</span>
+                        <span class="value freq" id="frekuensi1">0<span class="unit">Hz</span></span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">Power Factor</span>
+                        <span class="value pf" id="pf1">0<span class="unit">PF</span></span>
+                    </div>
                 </div>
                 <div class="card-footer">
                     <span class="relay-status">
@@ -655,9 +670,10 @@
                 </div>
             </div>
 
+            <!-- KAMAR 2 -->
             <div class="data-card card-2">
                 <div class="card-header">
-                    <h3>Kamar 2</h3>
+                    <h3>🏠 Kamar 2</h3>
                     <span class="room-badge">Titik B</span>
                 </div>
                 <div class="card-metrics">
@@ -677,6 +693,14 @@
                         <span class="label">Energi</span>
                         <span class="value kwh" id="energi2">0<span class="unit">kWh</span></span>
                     </div>
+                    <div class="metric">
+                        <span class="label">Frekuensi</span>
+                        <span class="value freq" id="frekuensi2">0<span class="unit">Hz</span></span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">Power Factor</span>
+                        <span class="value pf" id="pf2">0<span class="unit">PF</span></span>
+                    </div>
                 </div>
                 <div class="card-footer">
                     <span class="relay-status">
@@ -689,7 +713,7 @@
 
         </div>
 
-        <div class="section-title" style="margin-top: 28px;">Log Sistem</div>
+        <div class="section-title" style="margin-top: 28px;">📋 Log Sistem</div>
         <div class="log-box" id="log">
             <div class="log-entry"><span class="time">[INIT]</span> 🔥 Sistem Monitoring siap</div>
             <div class="log-entry"><span class="time">[INIT]</span> ⏳ Menunggu data dari ESP32...</div>
@@ -755,6 +779,8 @@
         const arus1 = $('arus1');
         const tegangan1 = $('tegangan1');
         const energi1 = $('energi1');
+        const frekuensi1 = $('frekuensi1');
+        const pf1 = $('pf1');
         const relayDot1 = $('relayDot1');
         const relayLabel1 = $('relayLabel1');
         const alert1 = $('alert1');
@@ -763,6 +789,8 @@
         const arus2 = $('arus2');
         const tegangan2 = $('tegangan2');
         const energi2 = $('energi2');
+        const frekuensi2 = $('frekuensi2');
+        const pf2 = $('pf2');
         const relayDot2 = $('relayDot2');
         const relayLabel2 = $('relayLabel2');
         const alert2 = $('alert2');
@@ -770,6 +798,7 @@
         let lastAlert1 = 'Normal';
         let lastAlert2 = 'Normal';
         let esp32Online = false;
+        let hasData = false;
 
         // ============ LOG FUNCTION ============
         function log(msg, type = 'info') {
@@ -846,6 +875,7 @@
         }
 
         // ============ DETEKSI ESP32 ============
+        // Deteksi dari /sistem/status
         onValue(ref(db, '/sistem/status'), (snapshot) => {
             const status = snapshot.val();
             if (status === 'ONLINE') {
@@ -854,10 +884,18 @@
                 esp32Label.textContent = 'ESP32 — Online';
                 setStatus('🟢', 'ESP32 Online! Data real-time aktif.', 'Sistem monitoring berjalan', 'online');
                 log('✅ ESP32 terdeteksi! Monitoring aktif.', 'success');
-            } else {
-                esp32Online = false;
-                esp32Dot.className = 'dot dot-gray';
-                esp32Label.textContent = 'ESP32 — Menunggu';
+            }
+        });
+
+        // FALLBACK: Deteksi dari data kamar (jika /sistem/status tidak ada)
+        onValue(ref(db, '/kamar_1'), (snapshot) => {
+            const data = snapshot.val();
+            if (data && data.daya !== undefined && !esp32Online) {
+                esp32Online = true;
+                esp32Dot.className = 'dot dot-green';
+                esp32Label.textContent = 'ESP32 — Online';
+                setStatus('🟢', 'ESP32 Online! Data real-time aktif.', 'Sistem monitoring berjalan', 'online');
+                log('✅ ESP32 terdeteksi (fallback via data kamar)', 'success');
             }
         });
 
@@ -870,7 +908,7 @@
             }
         });
 
-        // ============ LISTENER DATA REAL-TIME (ROOT) ============
+        // ============ LISTENER DATA REAL-TIME ============
         // Kamar 1
         onValue(ref(db, '/kamar_1'), (snapshot) => {
             const data = snapshot.val();
@@ -879,9 +917,16 @@
                 arus1.innerHTML = `${data.arus?.toFixed(2) || 0}<span class="unit">A</span>`;
                 tegangan1.innerHTML = `${data.tegangan?.toFixed(1) || 0}<span class="unit">V</span>`;
                 energi1.innerHTML = `${data.energi?.toFixed(3) || 0}<span class="unit">kWh</span>`;
+                frekuensi1.innerHTML = `${data.frekuensi?.toFixed(1) || 0}<span class="unit">Hz</span>`;
+                pf1.innerHTML = `${data.pf?.toFixed(2) || 0}<span class="unit">PF</span>`;
                 const on = data.relay === true;
                 relayDot1.className = `relay-dot ${on ? 'on' : 'off'}`;
                 relayLabel1.textContent = `Relay ${on ? 'ON' : 'OFF'}`;
+
+                if (!hasData) {
+                    hasData = true;
+                    log('📊 Data pertama masuk dari Kamar 1', 'success');
+                }
             }
         });
 
@@ -894,13 +939,12 @@
                 val.includes('Warning') ? 'warning' : 'info'
             );
 
-            // ============ KIRIM NOTIFIKASI UNTUK SEMUA STATUS PENTING ============
-            const isAnomaly = val.includes('berlebih') || 
-                              val.includes('RELAY_TRIP') || 
-                              val.includes('TOKEN_HABIS') ||
-                              val.includes('KRITIS') ||
-                              val.includes('WARNING');
-            
+            const isAnomaly = val.includes('berlebih') ||
+                val.includes('RELAY_TRIP') ||
+                val.includes('TOKEN_HABIS') ||
+                val.includes('KRITIS') ||
+                val.includes('WARNING');
+
             if (isAnomaly && lastAlert1 !== val && esp32Online) {
                 await kirimNotifikasiOtomatis('Kamar 1', val);
                 log(`🚨 Status berubah: ${val}`, 'warn');
@@ -916,6 +960,8 @@
                 arus2.innerHTML = `${data.arus?.toFixed(2) || 0}<span class="unit">A</span>`;
                 tegangan2.innerHTML = `${data.tegangan?.toFixed(1) || 0}<span class="unit">V</span>`;
                 energi2.innerHTML = `${data.energi?.toFixed(3) || 0}<span class="unit">kWh</span>`;
+                frekuensi2.innerHTML = `${data.frekuensi?.toFixed(1) || 0}<span class="unit">Hz</span>`;
+                pf2.innerHTML = `${data.pf?.toFixed(2) || 0}<span class="unit">PF</span>`;
                 const on = data.relay === true;
                 relayDot2.className = `relay-dot ${on ? 'on' : 'off'}`;
                 relayLabel2.textContent = `Relay ${on ? 'ON' : 'OFF'}`;
@@ -931,12 +977,12 @@
                 val.includes('Warning') ? 'warning' : 'info'
             );
 
-            const isAnomaly = val.includes('berlebih') || 
-                              val.includes('RELAY_TRIP') || 
-                              val.includes('TOKEN_HABIS') ||
-                              val.includes('KRITIS') ||
-                              val.includes('WARNING');
-            
+            const isAnomaly = val.includes('berlebih') ||
+                val.includes('RELAY_TRIP') ||
+                val.includes('TOKEN_HABIS') ||
+                val.includes('KRITIS') ||
+                val.includes('WARNING');
+
             if (isAnomaly && lastAlert2 !== val && esp32Online) {
                 await kirimNotifikasiOtomatis('Kamar 2', val);
                 log(`🚨 Status berubah: ${val}`, 'warn');
@@ -1005,10 +1051,11 @@
                     await autoRequestPermission();
                 }
 
-                if (!esp32Online) {
+                // Jangan override status jika ESP32 sudah online
+                if (!esp32Online && !hasData) {
                     setStatus('⏳', 'Menunggu koneksi ke ESP32...', 'Pastikan perangkat terhubung ke internet', 'waiting');
                 }
-                
+
                 log('✅ Sistem siap! Menunggu ESP32 mengirim data.', 'success');
 
             } catch (error) {
