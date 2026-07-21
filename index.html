@@ -858,7 +858,7 @@
                 esp32Online = false;
                 esp32Dot.className = 'dot dot-gray';
                 esp32Label.textContent = 'ESP32 — Menunggu';
-                setStatus('⏳', 'Menunggu koneksi ke ESP32...', 'Pastikan perangkat terhubung ke internet', 'waiting');
+                // Jangan set status di sini, biarkan default
             }
         });
 
@@ -991,7 +991,13 @@
                     await autoRequestPermission();
                 }
 
-                setStatus('⏳', 'Menunggu koneksi ke ESP32...', 'Pastikan perangkat terhubung ke internet', 'waiting');
+                // ============ JANGAN OVERRIDE STATUS DI SINI! ============
+                // Biarkan listener yang atur status.
+                // Tapi kita set status default "Menunggu" hanya jika belum ada data.
+                if (!esp32Online) {
+                    setStatus('⏳', 'Menunggu koneksi ke ESP32...', 'Pastikan perangkat terhubung ke internet', 'waiting');
+                }
+                
                 log('✅ Sistem siap! Menunggu ESP32 mengirim data.', 'success');
 
             } catch (error) {
