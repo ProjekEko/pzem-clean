@@ -918,7 +918,7 @@
 
         // ============ LISTENER DATA REAL-TIME ============
         // Kamar 1
-        onValue(ref(db, '/kamar_1'), (snapshot) => {
+        onValue(ref(db, '/history/kamar_1'), (snapshot) => {
             const data = snapshot.val();
             if (data) {
                 daya1.innerHTML = `${data.daya?.toFixed(2) || 0}<span class="unit">W</span>`;
