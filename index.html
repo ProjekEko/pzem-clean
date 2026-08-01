@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sistem Monitoring Kos</title>
+    <link rel="icon" type="image/png" href="gambar/images.png" />
+    <style>
+        /* ============ RESET & BASE ============ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f0f4fe;
+            color: #1a1a2e;
+            min-height: 100vh;
+            padding: 24px 16px;
+            background-image: radial-gradient(ellipse at 10% 20%, rgba(79, 140, 255, 0.06) 0%, transparent 60%),
+                radial-gradient(ellipse at 90% 80%, rgba(124, 58, 237, 0.04) 0%, transparent 60%);
+        }
+
+        .app-container {
+            max-width: 860px;
+            margin: 0 auto;
+        }
+
+        .app-header {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 24px;
+            padding: 24px 28px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            box-shadow: 0 8px 32px rgba(0, 20, 80, 0.06);
+        }
+
+        .header-left h1 {
+            font-size: 26px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #1a1a3e, #4f6ef7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+        }
+
+        .header-left p {
+            font-size: 14px;
+            color: #6b7280;
+            font-weight: 400;
+            margin-top: 2px;
+        }
+
+        .header-badge {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(0, 0, 0, 0.04);
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .badge .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .dot-green {
+            background: #22c55e;
+            box-shadow: 0 0 8px rgba(34, 197, 94, 0.25);
+        }
+        .dot-yellow {
+            background: #eab308;
+            box-shadow: 0 0 8px rgba(234, 179, 8, 0.25);
+        }
+        .dot-red {
+            background: #ef4444;
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.25);
+        }
+        .dot-gray {
+            background: #9ca3af;
+        }
+
+        .status-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 16px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            box-shadow: 0 4px 16px rgba(0, 20, 80, 0.04);
+        }
+
+        .status-card .status-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .status-card .status-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .status-card .status-icon.online {
+            background: rgba(34, 197, 94, 0.12);
+            color: #16a34a;
+        }
+        .status-card .status-icon.offline {
+            background: rgba(239, 68, 68, 0.10);
+            color: #dc2626;
+        }
+        .status-card .status-icon.waiting {
+            background: rgba(234, 179, 8, 0.10);
+            color: #ca8a04;
+        }
+
+        .status-text {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a1a2e;
+        }
+        .status-sub {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .token-box {
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(0, 0, 0, 0.04);
+            border-radius: 12px;
+            padding: 10px 16px;
+            font-size: 11px;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            color: #9ca3af;
+            word-break: break-all;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .token-box.active {
+            color: #1f2937;
+            border-color: rgba(34, 197, 94, 0.15);
+            background: rgba(34, 197, 94, 0.04);
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a2e;
+            margin: 28px 0 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(to right, rgba(0, 0, 0, 0.06), transparent);
+        }
+
+        .data-grid-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 8px;
+        }
+
+        @media (max-width: 600px) {
+            .data-grid-cards {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .data-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 20px;
+            padding: 22px 24px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(0, 20, 80, 0.04);
+        }
+
+        .data-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            border-radius: 20px 20px 0 0;
+        }
+
+        .data-card.card-1::before {
+            background: linear-gradient(90deg, #4f8cff, #7c3aed);
+        }
+
+        .data-card.card-2::before {
+            background: linear-gradient(90deg, #f59e0b, #ef4444);
+        }
+
+        .data-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(79, 140, 255, 0.15);
+            box-shadow: 0 12px 40px rgba(0, 20, 80, 0.08);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        .card-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a2e;
+        }
+
+        .card-header .room-badge {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 4px 12px;
+            border-radius: 40px;
+            background: rgba(0, 0, 0, 0.04);
+            color: #6b7280;
+        }
+
+        .card-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px 16px;
+        }
+
+        .metric {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .metric .label {
+            font-size: 11px;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            font-weight: 500;
+        }
+
+        .metric .value {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1a1a2e;
+            letter-spacing: -0.3px;
+        }
+
+        .metric .value .unit {
+            font-size: 13px;
+            font-weight: 400;
+            color: #9ca3af;
+            margin-left: 2px;
+        }
+
+        .metric .value.watt {
+            color: #2563eb;
+        }
+        .metric .value.amp {
+            color: #7c3aed;
+        }
+        .metric .value.volt {
+            color: #059669;
+        }
+        .metric .value.kwh {
+            color: #d97706;
+        }
+        .metric .value.freq {
+            color: #8b5cf6;
+        }
+        .metric .value.pf {
+            color: #ec4899;
+        }
+
+        .card-footer {
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px solid rgba(0, 0, 0, 0.04);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .relay-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #1f2937;
+        }
+
+        .relay-status .relay-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .relay-dot.on {
+            background: #22c55e;
+            box-shadow: 0 0 12px rgba(34, 197, 94, 0.2);
+        }
+        .relay-dot.off {
+            background: #ef4444;
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.15);
+        }
+
+        .alert-status {
+            font-size: 13px;
+            font-weight: 600;
+            padding: 4px 14px;
+            border-radius: 40px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .alert-status.normal {
+            background: rgba(34, 197, 94, 0.10);
+            color: #16a34a;
+        }
+        .alert-status.warning {
+            background: rgba(234, 179, 8, 0.10);
+            color: #ca8a04;
+            animation: pulse-glow-light 1.5s infinite;
+        }
+        .alert-status.danger {
+            background: rgba(239, 68, 68, 0.10);
+            color: #dc2626;
+            animation: pulse-glow-light 1s infinite;
+        }
+        .alert-status.info {
+            background: rgba(37, 99, 235, 0.06);
+            color: #6b7280;
+        }
+
+        @keyframes pulse-glow-light {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.6;
+            }
+        }
+
+        .notif-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            max-width: 380px;
+            width: 100%;
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .notif-popup {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 16px;
+            padding: 16px 20px;
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.10);
+            pointer-events: auto;
+            animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            transform-origin: bottom right;
+        }
+
+        .notif-popup.danger {
+            border-left: 4px solid #ef4444;
+        }
+        .notif-popup.warning {
+            border-left: 4px solid #eab308;
+        }
+        .notif-popup.success {
+            border-left: 4px solid #22c55e;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.96);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .notif-popup .notif-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a1a2e;
+        }
+        .notif-popup .notif-body {
+            font-size: 13px;
+            color: #4b5563;
+            margin-top: 2px;
+        }
+        .notif-popup .notif-time {
+            font-size: 10px;
+            color: #9ca3af;
+            margin-top: 6px;
+            display: block;
+        }
+
+        .log-box {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 16px;
+            padding: 16px 20px;
+            max-height: 180px;
+            overflow-y: auto;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 12px;
+            line-height: 1.8;
+            color: #4b5563;
+            margin-top: 8px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(0, 0, 0, 0.04) transparent;
+        }
+
+        .log-box::-webkit-scrollbar {
+            width: 4px;
+        }
+        .log-box::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .log-box::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.06);
+            border-radius: 4px;
+        }
+
+        .log-entry .time {
+            color: #9ca3af;
+        }
+        .log-entry .success-text {
+            color: #16a34a;
+        }
+        .log-entry .error-text {
+            color: #dc2626;
+        }
+        .log-entry .warn-text {
+            color: #ca8a04;
+        }
+        .log-entry .info-text {
+            color: #2563eb;
+        }
+
+        .debug-toggle {
+            font-size: 11px;
+            color: #9ca3af;
+            cursor: pointer;
+            transition: color 0.3s;
+            display: inline-block;
+            margin-top: 12px;
+            letter-spacing: 0.3px;
+        }
+
+        .debug-toggle:hover {
+            color: #6b7280;
+        }
+
+        .debug-section {
+            display: none;
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(0, 0, 0, 0.04);
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-top: 8px;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .debug-section.show {
+            display: flex;
+        }
+
+        .debug-section button {
+            padding: 6px 18px;
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            border-radius: 40px;
+            background: rgba(255, 255, 255, 0.6);
+            color: #374151;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .debug-section button:hover {
+            background: rgba(37, 99, 235, 0.08);
+            border-color: rgba(37, 99, 235, 0.2);
+            color: #1a1a2e;
+        }
+
+        .app-footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 12px;
+            color: #9ca3af;
+            padding: 16px 0;
+            border-top: 1px solid rgba(0, 0, 0, 0.04);
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 16px 12px;
+            }
+            .app-header {
+                padding: 18px 20px;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .header-left h1 {
+                font-size: 22px;
+            }
+            .data-card {
+                padding: 18px;
+            }
+            .metric .value {
+                font-size: 19px;
+            }
+            .notif-container {
+                right: 12px;
+                left: 12px;
+                max-width: none;
+            }
+            .badge {
+                font-size: 10px;
+                padding: 4px 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="app-container">
+
+        <header class="app-header">
+            <div class="header-left">
+                <h1>⚡ Sistem Monitoring Kos</h1>
+                <p>Real-time monitoring &amp; deteksi anomali listrik</p>
+            </div>
+            <div class="header-badge">
+                <span class="badge">
+                    <span class="dot dot-green" id="esp32Dot"></span>
+                    <span id="esp32Label">ESP32 — Menunggu</span>
+                </span>
+                <span class="badge">
+                    <span class="dot dot-yellow" id="tokenDot"></span>
+                    <span id="tokenLabel">Token — Inaktif</span>
+                </span>
+            </div>
+        </header>
+
+        <div class="status-card" id="statusCard">
+            <div class="status-left">
+                <div class="status-icon waiting" id="statusIcon">⏳</div>
+                <div>
+                    <div class="status-text" id="statusText">Menunggu koneksi ke ESP32...</div>
+                    <div class="status-sub" id="statusSub">Sistem akan aktif setelah perangkat terhubung</div>
+                </div>
+            </div>
+            <div style="font-size:12px; color:#9ca3af;" id="lastUpdate">—</div>
+        </div>
+
+        <div class="token-box" id="tokenBox">⏳ Menunggu token notifikasi...</div>
+
+        <div class="debug-toggle" onclick="toggleDebug()">⚙️ Debug</div>
+        <div class="debug-section" id="debugSection">
+            <button onclick="kirimNotifikasiTest()">📨 Test Notifikasi</button>
+        </div>
+
+        <div class="section-title">Data Real-time</div>
+
+        <div class="data-grid-cards">
+
+            <!-- KAMAR 1 -->
+            <div class="data-card card-1">
+                <div class="card-header">
+                    <h3>Kamar 1</h3>
+                    <span class="room-badge">Titik A</span>
+                </div>
+                <div class="card-metrics">
+                    <div class="metric">
+                        <span class="label">Daya</span>
+                        <span class="value watt" id="daya1">0<span class="unit">W</span></span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">Arus</span>
+                        <span class="value amp" id="arus1">0<span class="unit">A</span></span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">Tegangan</span>
+                        <span class="value volt" id="tegangan1">0<span class="unit">V</span></span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">Energi</span>
+                        <span class="value kwh" id="energi1">0<span class="unit">kWh</span></span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">Frekuensi</span>
+                        <span class="value freq" id="frekuensi1">0<span class="unit">Hz</span></span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">Power Factor</span>
+                        <span class="value pf" id="pf1">0<span class="unit">PF</span></span>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <span class="relay-status">
+                        <span class="relay-dot off" id="relayDot1"></span>
+                        <span id="relayLabel1">Relay OFF</span>
+                    </span>
+                    <span class="alert-status info" id="alert1">Menunggu data</span>
+                </div>
+            </div>
+
+            <!-- KAMAR 2 -->
+            <div class="data-card card-2">
+                <div class="card-header">
+                    <h3>Kamar 2</h3>
+                    <span class="room-badge">Titik B</span>
+                </div>
+                <div class="card-metrics">
+                    <div class="metric">
+                        <span class="label">Daya</span>
+                        <span class="value watt" id="daya2">0<span class="unit">W</span></span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">Arus</span>
+                        <span class="value amp" id="arus2">0<span class="unit">A</span></span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">Tegangan</span>
+                        <span class="value volt" id="tegangan2">0<span class="unit">V</span></span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">Energi</span>
+                        <span class="value kwh" id="energi2">0<span class="unit">kWh</span></span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">Frekuensi</span>
+                        <span class="value freq" id="frekuensi2">0<span class="unit">Hz</span></span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">Power Factor</span>
+                        <span class="value pf" id="pf2">0<span class="unit">PF</span></span>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <span class="relay-status">
+                        <span class="relay-dot off" id="relayDot2"></span>
+                        <span id="relayLabel2">Relay OFF</span>
+                    </span>
+                    <span class="alert-status info" id="alert2">Menunggu data</span>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="section-title" style="margin-top: 28px;">Log Sistem</div>
+        <div class="log-box" id="log">
+            <div class="log-entry"><span class="time">[INIT]</span> 🔥 Sistem Monitoring siap</div>
+            <div class="log-entry"><span class="time">[INIT]</span> ⏳ Menunggu data dari ESP32...</div>
+        </div>
+
+        <div class="notif-container" id="notifContainer"></div>
+
+        <div class="app-footer">
+            Sistem Monitoring &bull; 2026 &bull; IoT Monitoring
+        </div>
+
+    </div>
+
+    <!-- ============ FIREBASE SDK ============ -->
+    <script type="importmap">
+        {
+            "imports": {
+                "firebase/app": "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js",
+                "firebase/database": "https://www.gstatic.com/firebasejs/10.13.0/firebase-database.js",
+                "firebase/messaging": "https://www.gstatic.com/firebasejs/10.13.0/firebase-messaging.js"
+            }
+        }
+    </script>
+
+    <script type="module">
+        // ============ IMPORTS ============
+        import { initializeApp } from "firebase/app";
+        import { getDatabase, ref, set, get, onValue } from "firebase/database";
+        import { getMessaging, getToken, onMessage } from "firebase/messaging";
+
+        // ============ FIREBASE CONFIG ============
+        const firebaseConfig = {
+            apiKey: "AIzaSyDPp_SyvQJApKckpT-YpGBbfMMBAkpvj7A",
+            authDomain: "pzemm-6b93a.firebaseapp.com",
+            databaseURL: "https://pzemm-6b93a-default-rtdb.firebaseio.com/",
+            projectId: "pzemm-6b93a",
+            storageBucket: "pzemm-6b93a.firebasestorage.app",
+            messagingSenderId: "160759139666",
+            appId: "1:160759139666:web:68172f5527557b36507e8b"
+        };
+
+        const VAPID_KEY = "BOJzlfEzwgido0_CRhFroVR6Ux3XPLasuj9bc0OQanfuplBgv1YUeHu63UG01oIsAuKcnHh11xA2dUmNQm_zq2A";
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const messaging = getMessaging(app);
+
+        // ============ DOM REFS ============
+        const $ = id => document.getElementById(id);
+        const logEl = $('log');
+        const statusText = $('statusText');
+        const statusSub = $('statusSub');
+        const statusIcon = $('statusIcon');
+        const lastUpdate = $('lastUpdate');
+        const tokenBox = $('tokenBox');
+        const esp32Label = $('esp32Label');
+        const esp32Dot = $('esp32Dot');
+        const tokenLabel = $('tokenLabel');
+        const tokenDot = $('tokenDot');
+        const notifContainer = $('notifContainer');
+
+        const daya1 = $('daya1');
+        const arus1 = $('arus1');
+        const tegangan1 = $('tegangan1');
+        const energi1 = $('energi1');
+        const frekuensi1 = $('frekuensi1');
+        const pf1 = $('pf1');
+        const relayDot1 = $('relayDot1');
+        const relayLabel1 = $('relayLabel1');
+        const alert1 = $('alert1');
+
+        const daya2 = $('daya2');
+        const arus2 = $('arus2');
+        const tegangan2 = $('tegangan2');
+        const energi2 = $('energi2');
+        const frekuensi2 = $('frekuensi2');
+        const pf2 = $('pf2');
+        const relayDot2 = $('relayDot2');
+        const relayLabel2 = $('relayLabel2');
+        const alert2 = $('alert2');
+
+        let lastAlert1 = 'Normal';
+        let lastAlert2 = 'Normal';
+        let esp32Online = false;
+        let hasData = false;
+
+        // ============ LOG FUNCTION ============
+        function log(msg, type = 'info') {
+            const time = new Date().toLocaleTimeString('id-ID', { hour12: false });
+            const cls = type === 'success' ? 'success-text' :
+                type === 'error' ? 'error-text' :
+                type === 'warn' ? 'warn-text' : 'info-text';
+            const div = document.createElement('div');
+            div.className = 'log-entry';
+            div.innerHTML = `<span class="time">[${time}]</span> <span class="${cls}">${msg}</span>`;
+            logEl.appendChild(div);
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        // ============ SET STATUS ============
+        function setStatus(icon, text, sub, type = 'waiting') {
+            statusIcon.textContent = icon;
+            statusIcon.className = 'status-icon ' + type;
+            statusText.textContent = text;
+            statusSub.textContent = sub || '';
+        }
+
+        // ============ SHOW NOTIFICATION IN WEB UI ============
+        function showNotifInWeb(title, body, type = 'danger') {
+            const div = document.createElement('div');
+            div.className = `notif-popup ${type}`;
+            div.innerHTML = `
+                <div class="notif-title">${title}</div>
+                <div class="notif-body">${body}</div>
+                <span class="notif-time">${new Date().toLocaleTimeString('id-ID', { hour12: false })}</span>
+            `;
+            notifContainer.prepend(div);
+            setTimeout(() => div.remove(), 18000);
+        }
+
+        // ============ SHOW NATIVE BROWSER NOTIFICATION (FOREGROUND) ============
+        function showNativeNotification(title, body) {
+            if (Notification.permission === 'granted') {
+                const notification = new Notification(title, {
+                    body: body,
+                    icon: '/gambar/images.png',
+                    badge: '/gambar/images.png',
+                    vibrate: [200, 100, 200],
+                    requireInteraction: true,
+                    tag: 'pzem-foreground-notification'
+                });
+
+                notification.onclick = function() {
+                    notification.close();
+                    window.focus();
+                };
+
+                setTimeout(() => {
+                    notification.close();
+                }, 30000);
+            }
+        }
+
+        // ============ KIRIM NOTIFIKASI OTOMATIS ============
+        async function kirimNotifikasiOtomatis(kamar, pesan) {
+            try {
+                const snapshot = await get(ref(db, '/fcm_tokens'));
+                const tokensData = snapshot.val();
+                if (!tokensData) {
+                    log('⚠️ Belum ada FCM token terdaftar', 'warn');
+                    return;
+                }
+
+                const tokenList = Object.values(tokensData).map(t => t.token);
+                let success = 0;
+
+                for (const token of tokenList) {
+                    try {
+                        const response = await fetch('/api/send', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                token: token,
+                                title: `🚨 PERINGATAN ${kamar}!`,
+                                body: pesan
+                            })
+                        });
+                        const result = await response.json();
+                        if (result.success) success++;
+                    } catch (e) {
+                        log(`❌ Gagal kirim notif: ${e.message}`, 'error');
+                    }
+                }
+
+                if (success > 0) {
+                    log(`📤 Notifikasi peringatan terkirim ke ${success} perangkat`, 'success');
+                    
+                    // ============ TAMPILKAN DI WEB UI ============
+                    showNotifInWeb(`🚨 PERINGATAN ${kamar}`, pesan, 'danger');
+                    
+                    // ============ TAMPILKAN SEBAGAI NATIVE NOTIFICATION ============
+                    showNativeNotification(`🚨 PERINGATAN ${kamar}`, pesan);
+                }
+            } catch (e) {
+                log(`❌ Error kirim notifikasi: ${e.message}`, 'error');
+            }
+        }
+
+        // ============ DETEKSI ESP32 ============
+        // Deteksi dari /sistem/status
+        onValue(ref(db, '/sistem/status'), (snapshot) => {
+            const status = snapshot.val();
+            if (status === 'ONLINE') {
+                esp32Online = true;
+                esp32Dot.className = 'dot dot-green';
+                esp32Label.textContent = 'ESP32 — Online';
+                setStatus('🟢', 'ESP32 Online! Data real-time aktif.', 'Sistem monitoring berjalan', 'online');
+                log('✅ ESP32 terdeteksi! Monitoring aktif.', 'success');
+            }
+        });
+
+        // FALLBACK: Deteksi dari data kamar (jika /sistem/status tidak ada)
+        onValue(ref(db, '/kamar_1'), (snapshot) => {
+            const data = snapshot.val();
+            if (data && data.daya !== undefined && !esp32Online) {
+                esp32Online = true;
+                esp32Dot.className = 'dot dot-green';
+                esp32Label.textContent = 'ESP32 — Online';
+                setStatus('🟢', 'ESP32 Online! Data real-time aktif.', 'Sistem monitoring berjalan', 'online');
+                log('✅ ESP32 terdeteksi (fallback via data kamar)', 'success');
+            }
+        });
+
+        // ============ UPDATE TIMESTAMP ============
+        onValue(ref(db, '/sistem/lastUpdate'), (snapshot) => {
+            const ts = snapshot.val();
+            if (ts) {
+                const d = new Date(ts);
+                lastUpdate.textContent = d.toLocaleTimeString('id-ID', { hour12: false });
+            }
+        });
+
+        // ============ LISTENER DATA REAL-TIME ============
+        // Kamar 1
+        onValue(ref(db, '/kamar_1'), (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                daya1.innerHTML = `${data.daya?.toFixed(2) || 0}<span class="unit">W</span>`;
+                arus1.innerHTML = `${data.arus?.toFixed(2) || 0}<span class="unit">A</span>`;
+                tegangan1.innerHTML = `${data.tegangan?.toFixed(1) || 0}<span class="unit">V</span>`;
+                energi1.innerHTML = `${data.energi?.toFixed(3) || 0}<span class="unit">kWh</span>`;
+                frekuensi1.innerHTML = `${data.frekuensi?.toFixed(1) || 0}<span class="unit">Hz</span>`;
+                pf1.innerHTML = `${data.pf?.toFixed(2) || 0}<span class="unit">PF</span>`;
+                const on = data.relay === true;
+                relayDot1.className = `relay-dot ${on ? 'on' : 'off'}`;
+                relayLabel1.textContent = `Relay ${on ? 'ON' : 'OFF'}`;
+
+                if (!hasData) {
+                    hasData = true;
+                    log('📊 Data pertama masuk dari Kamar 1', 'success');
+                }
+            }
+        });
+
+        onValue(ref(db, '/alerts/kamar_1'), async (snapshot) => {
+            const val = snapshot.val() || 'Normal';
+            alert1.textContent = val;
+            alert1.className = 'alert-status ' + (
+                val.includes('berlebih') ? 'danger' :
+                val.includes('Normal') ? 'normal' :
+                val.includes('Warning') ? 'warning' : 'info'
+            );
+
+            const isAnomaly = val.includes('berlebih') ||
+                val.includes('RELAY_TRIP') ||
+                val.includes('TOKEN_HABIS') ||
+                val.includes('KRITIS') ||
+                val.includes('WARNING');
+
+            if (isAnomaly && lastAlert1 !== val && esp32Online) {
+                await kirimNotifikasiOtomatis('Kamar 1', val);
+                log(`🚨 Status berubah: ${val}`, 'warn');
+            }
+            lastAlert1 = val;
+        });
+
+        // Kamar 2
+        onValue(ref(db, '/kamar_2'), (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                daya2.innerHTML = `${data.daya?.toFixed(2) || 0}<span class="unit">W</span>`;
+                arus2.innerHTML = `${data.arus?.toFixed(2) || 0}<span class="unit">A</span>`;
+                tegangan2.innerHTML = `${data.tegangan?.toFixed(1) || 0}<span class="unit">V</span>`;
+                energi2.innerHTML = `${data.energi?.toFixed(3) || 0}<span class="unit">kWh</span>`;
+                frekuensi2.innerHTML = `${data.frekuensi?.toFixed(1) || 0}<span class="unit">Hz</span>`;
+                pf2.innerHTML = `${data.pf?.toFixed(2) || 0}<span class="unit">PF</span>`;
+                const on = data.relay === true;
+                relayDot2.className = `relay-dot ${on ? 'on' : 'off'}`;
+                relayLabel2.textContent = `Relay ${on ? 'ON' : 'OFF'}`;
+            }
+        });
+
+        onValue(ref(db, '/alerts/kamar_2'), async (snapshot) => {
+            const val = snapshot.val() || 'Normal';
+            alert2.textContent = val;
+            alert2.className = 'alert-status ' + (
+                val.includes('berlebih') ? 'danger' :
+                val.includes('Normal') ? 'normal' :
+                val.includes('Warning') ? 'warning' : 'info'
+            );
+
+            const isAnomaly = val.includes('berlebih') ||
+                val.includes('RELAY_TRIP') ||
+                val.includes('TOKEN_HABIS') ||
+                val.includes('KRITIS') ||
+                val.includes('WARNING');
+
+            if (isAnomaly && lastAlert2 !== val && esp32Online) {
+                await kirimNotifikasiOtomatis('Kamar 2', val);
+                log(`🚨 Status berubah: ${val}`, 'warn');
+            }
+            lastAlert2 = val;
+        });
+
+        // ============ AUTO REQUEST PERMISSION ============
+        async function autoRequestPermission() {
+            try {
+                const permission = await Notification.requestPermission();
+                if (permission === 'granted') {
+                    const registration = await navigator.serviceWorker.ready;
+                    const token = await getToken(messaging, {
+                        vapidKey: VAPID_KEY,
+                        serviceWorkerRegistration: registration
+                    });
+                    if (token) {
+                        tokenBox.textContent = `🔑 Token: ${token}`;
+                        tokenBox.className = 'token-box active';
+                        tokenDot.className = 'dot dot-green';
+                        tokenLabel.textContent = 'Token — Aktif';
+                        log('✅ FCM token berhasil didapatkan', 'success');
+                        const tokenPath = '/fcm_tokens/' + token.replace(/[.#$\/\[\]]/g, '_');
+                        await set(ref(db, tokenPath), { token, timestamp: Date.now() });
+                        log('✅ Token tersimpan di database', 'success');
+                    }
+                } else {
+                    tokenDot.className = 'dot dot-red';
+                    tokenLabel.textContent = 'Token — Ditolak';
+                    log('❌ Izin notifikasi ditolak pengguna', 'error');
+                }
+            } catch (error) {
+                log(`❌ Error auto request: ${error.message}`, 'error');
+            }
+        }
+
+        // ============ AUTO RUN SAAT LOAD ============
+        window.addEventListener('load', async () => {
+            log('🔥 Sistem Monitoring inisialisasi...', 'info');
+            try {
+                await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+                log('✅ Service Worker terdaftar', 'success');
+                const registration = await navigator.serviceWorker.ready;
+                log('✅ Service Worker aktif', 'success');
+
+                try {
+                    const token = await getToken(messaging, {
+                        vapidKey: VAPID_KEY,
+                        serviceWorkerRegistration: registration
+                    });
+                    if (token) {
+                        tokenBox.textContent = `🔑 Token: ${token}`;
+                        tokenBox.className = 'token-box active';
+                        tokenDot.className = 'dot dot-green';
+                        tokenLabel.textContent = 'Token — Aktif';
+                        log('✅ Token ditemukan (sudah ada sebelumnya)', 'success');
+                        const tokenPath = '/fcm_tokens/' + token.replace(/[.#$\/\[\]]/g, '_');
+                        await set(ref(db, tokenPath), { token, timestamp: Date.now() });
+                    } else {
+                        log('⏳ Belum ada token, meminta izin...', 'info');
+                        await autoRequestPermission();
+                    }
+                } catch (e) {
+                    log('⏳ Belum ada token, meminta izin...', 'info');
+                    await autoRequestPermission();
+                }
+
+                // Jangan override status jika ESP32 sudah online
+                if (!esp32Online && !hasData) {
+                    setStatus('⏳', 'Menunggu koneksi ke ESP32...', 'Pastikan perangkat terhubung ke internet', 'waiting');
+                }
+
+                log('✅ Sistem siap! Menunggu ESP32 mengirim data.', 'success');
+
+            } catch (error) {
+                log(`❌ Error inisialisasi: ${error.message}`, 'error');
+                setTimeout(autoRequestPermission, 3000);
+            }
+        });
+
+        // ============ TANGKAP NOTIFIKASI FOREGROUND ============
+        onMessage(messaging, (payload) => {
+            const title = payload.notification?.title || 'Notifikasi';
+            const body = payload.notification?.body || '';
+            log(`🔔 Notifikasi diterima: ${title}`, 'info');
+            
+            // ============ TAMPILKAN DI WEB UI ============
+            showNotifInWeb(title, body, 'warning');
+            
+            // ============ TAMPILKAN SEBAGAI NATIVE NOTIFICATION ============
+            showNativeNotification(title, body);
+        });
+
+        // ============ DEBUG FUNCTIONS ============
+        window.kirimNotifikasiTest = async function() {
+            try {
+                const snapshot = await get(ref(db, '/fcm_tokens'));
+                const tokensData = snapshot.val();
+                if (!tokensData) {
+                    log('❌ Belum ada token terdaftar', 'error');
+                    return;
+                }
+                const tokenList = Object.values(tokensData).map(t => t.token);
+                let success = 0;
+                for (const token of tokenList) {
+                    const response = await fetch('/api/send', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            token: token,
+                            title: '🔧 Test Notifikasi Sistem',
+                            body: 'Sistem monitoring berjalan normal. Ini adalah notifikasi uji coba.'
+                        })
+                    });
+                    const result = await response.json();
+                    if (result.success) success++;
+                }
+                log(`✅ Test notifikasi terkirim ke ${success} perangkat`, 'success');
+            } catch (e) {
+                log(`❌ Error: ${e.message}`, 'error');
+            }
+        };
+
+        window.toggleDebug = function() {
+            const el = document.getElementById('debugSection');
+            el.classList.toggle('show');
+        };
+
+        log('🔥 Sistem siap menunggu data dari ESP32...', 'info');
+    </script>
+
+</body>
+
+</html>
